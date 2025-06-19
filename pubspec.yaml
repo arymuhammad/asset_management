@@ -1,0 +1,56 @@
+name: assets_management
+version: 1.0.0+1
+publish_to: none
+description: Management Assets
+environment: 
+  sdk: 3.7.2
+
+dependencies: 
+  cupertino_icons: ^1.0.6
+  url_strategy: 0.3.0
+  shared_preferences: 2.1.0
+  get: 4.7.2
+  intl: ^0.18.1
+  http: 0.13.5
+  awesome_dialog: 3.2.1
+  cached_network_image: ^3.3.0
+  fluttertoast: ^8.2.2
+  datetime_picker_formfield: ^2.0.1
+  data_table_2: 2.5.15
+  # easy_sidemenu: 0.6.1
+  image_picker_web: any
+  file_picker: ^8.0.5
+  widget_zoom: ^0.0.4
+  printing: ^5.12.0
+  pdf: 3.11.3
+  barcode_widget: ^2.0.4
+  flutter: 
+    sdk: flutter
+  sidebarx: ^0.17.1
+  flutter_admin_scaffold: ^1.4.0
+  hugeicons: ^0.0.11
+  dropdown_search: ^6.0.2
+  uuid: ^4.5.1
+
+dev_dependencies: 
+  flutter_lints: ^3.0.0
+  flutter_test: 
+    sdk: flutter
+
+flutter: 
+  assets: 
+    - assets/image/
+  fonts: 
+    - family: Nunito
+      fonts: 
+        - asset: assets/fonts/Nunito-Black.ttf
+        - asset: assets/fonts/Nunito-BlackItalic.ttf
+        - asset: assets/fonts/Nunito-Bold.ttf
+        - asset: assets/fonts/Nunito-BoldItalic.ttf
+        - asset: assets/fonts/Nunito-Italic.ttf
+        - asset: assets/fonts/Nunito-Light.ttf
+        - asset: assets/fonts/Nunito-LightItalic.ttf
+        - asset: assets/fonts/Nunito-Medium.ttf
+        - asset: assets/fonts/Nunito-Regular.ttf
+  uses-material-design: true
+
