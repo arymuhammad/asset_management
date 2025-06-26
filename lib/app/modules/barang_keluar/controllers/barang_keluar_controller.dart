@@ -25,13 +25,13 @@ class BarangKeluarController extends GetxController {
   var toBranch = "".obs;
   final formKey = GlobalKey<FormState>();
   var tempAssetData = <DetailBarangMasukKeluar>[].obs;
-  var tempScanData = [].obs;
+  var tempScanData = <DetailBarangMasukKeluar>[].obs;
   var finalTempScanData = [].obs;
   var idTrx = "";
   var fromBranch = "";
   var author = "";
-  late TextEditingController scanInput, desc;
-  late StokOutData dataSource;
+  late TextEditingController scanInput, desc, searchController;
+  late StokOutData dataSourceOut;
 
   @override
   Future<void> onInit() async {
@@ -41,12 +41,13 @@ class BarangKeluarController extends GetxController {
     fromBranch = dataUser.kodeCabang!;
     author = dataUser.nama!;
     // super.onInit();
-    getStokOutData(dataUser.kodeCabang!);
+    // getStokOutData(dataUser.kodeCabang!);
     dataStokOutFiltered.value = dataStokOut;
     // dataSource = StokOutData(dataStokOut: dataStokOutFiltered);
     getBrand();
     scanInput = TextEditingController();
     desc = TextEditingController();
+    searchController = TextEditingController();
   }
 
   @override
@@ -70,9 +71,9 @@ class BarangKeluarController extends GetxController {
 
   getStokOutData(String kodeCabang) async {
     var data = {'type': '', 'from': kodeCabang};
+    // print(data);
     final response = await ServiceApi().stokOut(data);
     dataStokOut.value = response;
-    isLoading.value = false;
     return dataStokOut;
   }
 
@@ -90,6 +91,9 @@ class BarangKeluarController extends GetxController {
                       val.toLowerCase(),
                     ) ||
                     e.desc.toString().toLowerCase().contains(
+                      val.toLowerCase(),
+                    ) ||
+                    e.qtyAmount.toString().toLowerCase().contains(
                       val.toLowerCase(),
                     ) ||
                     e.createdAt.toString().toLowerCase().contains(
@@ -118,7 +122,7 @@ class BarangKeluarController extends GetxController {
     return idTrx = 'INV/URB/$generateNum';
   }
 
-  saveDataIn(String id, String type) async {
+  saveDataOut(String id, String type) async {
     Get.back();
     loadingDialog("Mengirim data", "");
 
@@ -129,7 +133,7 @@ class BarangKeluarController extends GetxController {
                 .fold(0, (prev, qty) => prev + int.parse(qty!))
             : tempScanData
                 .map((e) => e.qtyOut)
-                .fold(0, (prev, qty) => prev + int.parse(qty));
+                .fold(0, (prev, qty) => prev + int.parse(qty!));
     // print(amount);
     var data = {
       "type": type,
@@ -170,11 +174,15 @@ class BarangKeluarController extends GetxController {
     detailStokOut.clear();
     desc.clear();
 
+    await getStokOutData(fromBranch);
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    dataSourceOut.notifyListeners();
+    generateNumbId();
     Get.back();
     dialogMsgScsUpd('Info', 'Sukses\nData tersimpan');
   }
 
-  submitDataIn(String id, String type) async {
+  submitDataOut(String id, String type) async {
     Get.back();
     loadingDialog("Mengirim data", "");
 
@@ -185,7 +193,7 @@ class BarangKeluarController extends GetxController {
                 .fold(0, (prev, qty) => prev + int.parse(qty!))
             : tempScanData
                 .map((e) => e.qtyOut)
-                .fold(0, (prev, qty) => prev + int.parse(qty));
+                .fold(0, (prev, qty) => prev + int.parse(qty!));
 
     var data = {
       "type": type,
@@ -247,9 +255,13 @@ class BarangKeluarController extends GetxController {
     }
     // var getStock = {"type": "", "cabang": fromBranch};
     // await ServiceApi().stokCRUD(getStock);
-
+    detailStokOut.clear();
     Get.back();
     dialogMsgScsUpd('Info', 'Sukses\nData tersimpan');
+    await getStokOutData(fromBranch);
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    dataSourceOut.notifyListeners();
+    generateNumbId();
   }
 
   editDataOut(String idStokOut) async {

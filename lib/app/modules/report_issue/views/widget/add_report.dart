@@ -52,7 +52,7 @@ addReport(
               content: Container(
                 width:
                     MediaQuery.of(context).size.width /
-                    (isWideScreen ? 2.2 : 1.6),
+                    (isWideScreen ? 2.2 : 1.2),
                 height: MediaQuery.of(context).size.height / 1.5,
                 decoration: const BoxDecoration(color: Colors.white),
                 child: SingleChildScrollView(
@@ -61,6 +61,7 @@ addReport(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 5,),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisSize: MainAxisSize.min,
@@ -234,12 +235,12 @@ addReport(
                               width: 90,
                               child: Text('Report Image'),
                             ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 beforeImage,
-                                const SizedBox(width: 10),
+                                const SizedBox(height: 5),
                                 CsElevatedButton(
                                   color: Colors.blue,
                                   fontsize: 14,

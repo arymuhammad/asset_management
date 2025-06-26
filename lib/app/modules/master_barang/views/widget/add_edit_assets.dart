@@ -8,6 +8,7 @@ import 'package:assets_management/app/modules/master_barang/controllers/master_b
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../data/helper/currency_input_formatter.dart';
 import 'add_edit_cat.dart';
 
 final assetC = Get.put(MasterBarangController());
@@ -17,10 +18,16 @@ addEditAssets(
   String? id,
   String? asset,
   String? category,
+  String? categoryName,
   String? price,
   String? kelompok,
   String? image,
+  String? satuan,
 ) {
+  assetC.catSelected.value = category ?? '';
+  assetC.catSelectedObj.value = CategoryAssets(catName: categoryName!);
+  assetC.unitSelected.value = satuan ?? '';
+  assetC.price.text = price ?? '';
   showDialog(
     context: context,
     builder: (context) {
@@ -171,7 +178,7 @@ addEditAssets(
                                 id != "" ? "update_asset" : "add_asset",
                                 id,
                                 image,
-                                isWideScreen
+                                isWideScreen,
                               );
                             },
                           ),
@@ -182,7 +189,7 @@ addEditAssets(
                             children: [
                               Expanded(
                                 child: CsTextField(
-                                  controller: assetC.price..text = price!,
+                                  controller: assetC.price,
                                   maxLines: 1,
                                   label: 'Price',
                                   onFieldSubmitted: (val) async {
@@ -193,6 +200,7 @@ addEditAssets(
                                       isWideScreen,
                                     );
                                   },
+                                  inputFormatters: [CurrencyInputFormatter()],
                                 ),
                               ),
                               const SizedBox(width: 5),

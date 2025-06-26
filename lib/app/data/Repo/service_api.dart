@@ -7,7 +7,9 @@ import 'package:assets_management/app/data/models/category_assets_model.dart';
 import 'package:assets_management/app/data/models/detail_barang_masuk_keluar_model.dart';
 import 'package:assets_management/app/data/models/report_model.dart';
 import 'package:assets_management/app/data/models/request_detail_model.dart';
+import 'package:assets_management/app/data/models/stock_detail_model.dart';
 import 'package:assets_management/app/data/models/stok_model.dart';
+import 'package:assets_management/app/modules/stok/views/widget/detail_stock.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -363,14 +365,21 @@ class ServiceApi {
       final response = await http
           .post(Uri.parse('${baseUrl}stock'), body: data)
           .timeout(const Duration(minutes: 1));
-      //print('${baseUrl}stock');
-      //print(data);
+
       switch (response.statusCode) {
         case 200:
           List<dynamic> result = json.decode(response.body)['data'];
-          List<Stok> data = result.map((e) => Stok.fromJson(e)).toList();
-          //print(result);
-          return data;
+          if (data['type'] == "stock_in" || data['type'] == "stock_out") {
+            List<StockDetail> data =
+                result.map((e) => StockDetail.fromJson(e)).toList();
+            if (data == []) return null;
+            return data;
+          } else {
+            List<Stok> data = result.map((e) => Stok.fromJson(e)).toList();
+
+            return data;
+          }
+        //print(result);
         default:
           throw Exception(response.reasonPhrase);
       }
@@ -689,6 +698,7 @@ class ServiceApi {
       final response = await http
           .post(Uri.parse('${baseUrl}request'), body: data)
           .timeout(const Duration(minutes: 1));
+
       switch (response.statusCode) {
         case 200:
           if (data['type'] == 'add_request') {
@@ -698,15 +708,12 @@ class ServiceApi {
             Get.back();
             dialogMsgScsUpd('Info', 'Data berhasil diupdate');
           } else if (data['type'] == 'add_detail_request') {
-          } else if (data['type'] == 'delete_stokIn') {
-            showToast("Data berhasil dihapus", "green");
-          } else if (data['type'] == 'reject_data') {
-            showToast("Data berhasil direject", "green");
           } else {
             List<dynamic> result = json.decode(response.body)['data'];
 
             if (data['type'] == 'detail_request' ||
-                data['type'] == 'get_item_request') {
+                data['type'] == 'get_item_request' ||
+                data['type'] == 'detail_request') {
               List<RequestDetailModel> data =
                   result.map((e) => RequestDetailModel.fromJson(e)).toList();
               return data;
@@ -721,8 +728,8 @@ class ServiceApi {
       }
     } on Exception catch (e) {
       // rethrow;
-      showToast('$e', 'red');
       Get.back();
+      showToast('$e', 'red');
     }
   }
 }

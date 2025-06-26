@@ -1,3 +1,4 @@
+import 'package:assets_management/app/data/helper/const.dart';
 import 'package:assets_management/app/data/models/report_model.dart';
 import 'package:assets_management/app/modules/report_issue/views/widget/add_report.dart';
 import 'package:data_table_2/data_table_2.dart';
@@ -16,114 +17,154 @@ class ReportIssueView extends GetView<ReportIssueController> {
   final reportC = Get.put(ReportIssueController());
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Obx(() {
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child:
-              reportC.isLoading.value
-                  ? const Center(child: CircularProgressIndicator())
-                  : Theme(
-                    data: Theme.of(context).copyWith(
-                      cardColor: Colors.blueGrey[50],
-                      dividerColor: Colors.grey[300],
-                      textTheme: const TextTheme(
-                        bodyMedium: TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    child: PaginatedDataTable2(
-                      minWidth: 1300,
-                      dataRowHeight:
-                          200, //minimal tinggi baris, bisa disesuaikan
-                      wrapInCard: true,
-                      columnSpacing: 20,
-                      horizontalMargin: 12,
-                      // isHorizontalScrollBarVisible: true,
-                      // isVerticalScrollBarVisible: true,
-                      // columnSpacing: 100,
-                      // horizontalMargin: 40,
-                      smRatio: 0.9, // Rasio lebar kolom S terhadap M
-                      lmRatio: 2.0,
-                      fixedLeftColumns: 1,
-                      rowsPerPage: reportC.rowsPerPage,
-                      availableRowsPerPage: const [5, 10, 20, 50, 100],
-                      onRowsPerPageChanged: (value) {
-                        if (value != null) {
-                          reportC.rowsPerPage = value;
-                        }
-                      },
-                      renderEmptyRowsInTheEnd: false,
-                      showFirstLastButtons: true,
-                      empty: const Text('Belum ada data'),
-                      headingRowColor: WidgetStateProperty.resolveWith(
-                        (states) => Colors.grey[400],
-                      ),
-                      headingRowHeight: 40,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWideScreen = constraints.maxWidth >= 800;
+        return Scaffold(
+          body: Obx(() {
+            return Padding(
+              padding: const EdgeInsets.all(12),
+              child:
+                  reportC.isLoading.value
+                      ? const Center(child: CircularProgressIndicator())
+                      : PaginatedDataTable2(
+                        minWidth: 1300,
+                        dataRowHeight:
+                            200, //minimal tinggi baris, bisa disesuaikan
+                        wrapInCard: true,
+                        columnSpacing: 20,
+                        horizontalMargin: 12,
+                        // isHorizontalScrollBarVisible: true,
+                        // isVerticalScrollBarVisible: true,
+                        // columnSpacing: 100,
+                        // horizontalMargin: 40,
+                        smRatio: 0.9, // Rasio lebar kolom S terhadap M
+                        lmRatio: 2.0,
+                        fixedLeftColumns: 1,
+                        rowsPerPage: reportC.rowsPerPage,
+                        availableRowsPerPage: const [5, 10, 20, 50, 100],
+                        onRowsPerPageChanged: (value) {
+                          if (value != null) {
+                            reportC.rowsPerPage = value;
+                          }
+                        },
+                        renderEmptyRowsInTheEnd: false,
+                        showFirstLastButtons: true,
+                        empty: const Text('Belum ada data'),
+                        headingRowColor: WidgetStateProperty.resolveWith(
+                          (states) => Colors.grey[400],
+                        ),
+                        headingRowHeight: 40,
 
-                      actions: [
-                        SizedBox(
-                          width: 150,
-                          height: 35,
-                          child: CsTextField(
-                            // readOnly: false,
-                            label: 'Search Data',
-                            onChanged: (val) {
-                              reportC.filterDataReport(val);
-                              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                              reportC.dataSource.notifyListeners();
-                            },
+                        actions: [
+                          Visibility(
+                            visible: isWideScreen ? true : false,
+                            child: SizedBox(
+                              width: 150,
+                              height: 35,
+                              child: CsTextField(
+                                // readOnly: false,
+                                controller: reportC.searchController,
+                                label: 'Search Data',
+                                onChanged: (val) {
+                                  reportC.filterDataReport(val);
+                                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                                  reportC.dataSource.notifyListeners();
+                                },
+                              ),
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            await reportC.generateNumbId();
-                            addReport(context, '', '', '', '', '', '');
-                            // print(reportC.idReport);
-                          },
-                          icon: const Icon(HugeIcons.strokeRoundedAddCircle),
-                        ),
-                      ],
-                      header: const Text('Report & Maintenance'),
-                      columns: const [
-                        // DataColumn2(label: Text('ID'), fixedWidth: 150),
-                        DataColumn2(
-                          label: Center(child: Text('STORE')),
-                          fixedWidth: 170,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('REPORT')),
-                          fixedWidth: 220,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('TANGGAL')),
-                          fixedWidth: 120,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('PRIOTITAS')),
-                          fixedWidth: 95,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('STATUS')),
-                          size: ColumnSize.M,
-                        ),
-                        DataColumn(label: Center(child: Text('PROGRESS'))),
-                        DataColumn2(
-                          label: Center(child: Text('ISSUE')),
-                          size: ColumnSize.M,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('KETERANGAN')),
-                          size: ColumnSize.M,
-                        ),
-                        DataColumn(label: Center(child: Text('ACTION'))),
-                      ],
-                      source: reportC.dataSource,
-                    ),
-                  ),
+                          IconButton(
+                            onPressed: () async {
+                              await reportC.generateNumbId();
+                              addReport(context, '', '', '', '', '', '');
+                              // print(reportC.idReport);
+                            },
+                            icon: const Icon(HugeIcons.strokeRoundedAddCircle),
+                            tooltip: 'Add Report',
+                          ),
+                        ],
+                        header: const Text('Report & Maintenance'),
+                        columns: const [
+                          // DataColumn2(label: Text('ID'), fixedWidth: 150),
+                          DataColumn2(
+                            label: Center(child: Text('STORE')),
+                            fixedWidth: 170,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('REPORT')),
+                            fixedWidth: 220,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('DATE')),
+                            fixedWidth: 120,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('PRIORITY')),
+                            fixedWidth: 95,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('STATUS')),
+                            size: ColumnSize.M,
+                          ),
+                          DataColumn(label: Center(child: Text('PROGRESS'))),
+                          DataColumn2(
+                            label: Center(child: Text('ISSUE')),
+                            size: ColumnSize.M,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('NOTE')),
+                            size: ColumnSize.M,
+                          ),
+                          DataColumn(label: Center(child: Text('ACTION'))),
+                        ],
+                        source: reportC.dataSource,
+                      ),
+            );
+          }),
+          floatingActionButton:
+              !isWideScreen
+                  ? FloatingActionButton(
+                    onPressed: () {
+                      seachForm(context);
+                    },
+                    child: const Icon(Icons.search),
+                  )
+                  : null,
         );
-      }),
+      },
     );
   }
+}
+
+seachForm(context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.all(8),
+            content: SizedBox(
+              width: 150,
+              height: 35,
+              child: CsTextField(
+                // readOnly: false,
+                controller: reportC.searchController,
+                maxLines: 1,
+                label: 'Search Data',
+                onChanged: (val) {
+                  reportC.filterDataReport(val);
+                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                  reportC.dataSource.notifyListeners();
+                },
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class ReportData extends DataTableSource {
@@ -153,7 +194,7 @@ class ReportData extends DataTableSource {
           .entries
           .map((entry) {
             int idx = entry.key + 1; // +1 supaya mulai dari 1 bukan 0
-            String val = entry.value;
+            String val = entry.value.toUpperCase();
             return '$idx. ${val.substring(0, val.length > 25 ? 25 : val.length) + (val.length > 25 ? '...' : '')}';
           })
           .join('\n');
@@ -206,7 +247,7 @@ class ReportData extends DataTableSource {
           .entries
           .map((entry) {
             int idx = entry.key + 1; // +1 supaya mulai dari 1 bukan 0
-            String val = entry.value;
+            String val = entry.value.toUpperCase();
 
             return '$idx. ${val.substring(0, val.length > 15 ? 15 : val.length) + (val.length > 15 ? '...' : '')}';
           })
@@ -223,7 +264,7 @@ class ReportData extends DataTableSource {
           .entries
           .map((entry) {
             int idx = entry.key + 1; // +1 supaya mulai dari 1 bukan 0
-            String val = entry.value;
+            String val = entry.value.toUpperCase();
             return '$idx. ${val.substring(0, val.length > 15 ? 15 : val.length) + (val.length > 15 ? '...' : '')}';
           })
           .join('\n');
@@ -240,7 +281,7 @@ class ReportData extends DataTableSource {
           .entries
           .map((entry) {
             int idx = entry.key + 1; // +1 supaya mulai dari 1 bukan 0
-            String val = entry.value;
+            String val = entry.value.toUpperCase();
             return '$idx. ${val.substring(0, val.length > 15 ? 15 : val.length) + (val.length > 15 ? '...' : '')}';
           })
           .join('\n');
@@ -266,7 +307,7 @@ class ReportData extends DataTableSource {
         case 'ON PROGRESS':
           return Colors.yellowAccent[700]!;
         case 'DONE':
-          return Colors.greenAccent[700]!;
+          return darkGreen;
         case 'HOLD':
           return Colors.redAccent[700]!;
         // case 'OPEN':

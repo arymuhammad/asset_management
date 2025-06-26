@@ -1,4 +1,5 @@
 import 'package:assets_management/app/data/models/barang_masuk_keluar_model.dart';
+import 'package:assets_management/app/data/models/login_model.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,111 +14,165 @@ import '../controllers/barang_keluar_controller.dart';
 import 'widget/add_edit_stok_out.dart';
 
 class StokOutView extends GetView<BarangKeluarController> {
-  StokOutView({super.key});
+  StokOutView({super.key, this.userData});
 
   final stokOutC = Get.put(BarangKeluarController());
+  final Data? userData;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Obx(() {
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child:
-              stokOutC.isLoading.value
-                  ? const Center(child: CircularProgressIndicator())
-                  : LayoutBuilder(
-                    builder: (context, constraints) {
-                      bool isWideScreen = constraints.maxWidth >= 800;
-                      stokOutC.dataSource = StokOutData(
-                        dataStokOut: stokOutC.dataStokOutFiltered,
-                        screenWidth: isWideScreen,
-                      );
-                      return PaginatedDataTable2(
-                        minWidth: 1300,
-                        columnSpacing: 20,
-                        isHorizontalScrollBarVisible: true,
-                        isVerticalScrollBarVisible: true,
-                        // columnSpacing: 100,
-                        // horizontalMargin: 40,
-                        smRatio: 0.9, // Rasio lebar kolom S terhadap M
-                        lmRatio: 2.0,
-                        fixedLeftColumns: 1,
-                        rowsPerPage: stokOutC.rowsPerPage,
-                        availableRowsPerPage: const [5, 10, 20, 50, 100],
-                        onRowsPerPageChanged: (value) {
-                          if (value != null) {
-                            stokOutC.rowsPerPage = value;
-                          }
-                        },
-                        renderEmptyRowsInTheEnd: false,
-                        showFirstLastButtons: true,
-                        empty: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Belum ada data'),
-                          ],
-                        ),
-                        actions: [
-                          SizedBox(
-                            width: 150,
-                            height: 35,
-                            child: CsTextField(
-                              // readOnly: false,
-                              label: 'Search Data',
-                              onChanged: (val) {
-                                stokOutC.filterDataStokOut(val);
-                                // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                                stokOutC.dataSource.notifyListeners();
-                              },
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: ()async {
-                              addEditStokOut(
-                                context,
-                                '',
-                                '',
-                                '',
-                                '',
-                                '',
-                                RxList.empty(),
-                              );
-                              await stokOutC.generateNumbId();
-                              print(stokOutC.idTrx);
-                            },
-                            icon: const Icon(HugeIcons.strokeRoundedAddCircle),
-                          ),
-                        ],
-                        header: const Text('BARANG KELUAR'),
-                        columns: const [
-                          DataColumn(label: Text('ID')),
-                          DataColumn(label: Text('Pengirim')),
-                          DataColumn(label: Text('Penerima')),
-                          DataColumn2(
-                            label: Text('Keterangan'),
-                            size: ColumnSize.L,
-                          ),
-                          DataColumn2(label: Text('Total'), fixedWidth: 60),
-                          DataColumn2(
-                            label: Text('Dibuat oleh'),
-                            fixedWidth: 135,
-                          ),
-                          DataColumn2(label: Text('Tanggal'), fixedWidth: 110),
-                          DataColumn2(
-                            label: Text('Status'),
-                           fixedWidth: 115,
-                          ),
-                          DataColumn2(label: Text('Action'), fixedWidth: 100),
-                        ],
-                        source: stokOutC.dataSource,
-                      );
-                    },
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWideScreen = constraints.maxWidth >= 800;
+        stokOutC.dataSourceOut = StokOutData(
+          dataStokOut: stokOutC.dataStokOutFiltered,
+          screenWidth: isWideScreen,
         );
-      }),
+        return Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(12),
+            child: FutureBuilder(
+              future: stokOutC.getStokOutData(userData!.kodeCabang!),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return PaginatedDataTable2(
+                    minWidth: 1300,
+                    columnSpacing: 20,
+                    // // columnSpacing: 100,
+                    // horizontalMargin: 40,
+                    smRatio: 0.9, // Rasio lebar kolom S terhadap M
+                    lmRatio: 2.0,
+                    fixedLeftColumns: 1,
+                    rowsPerPage: stokOutC.rowsPerPage,
+                    availableRowsPerPage: const [5, 10, 20, 50, 100],
+                    onRowsPerPageChanged: (value) {
+                      if (value != null) {
+                        stokOutC.rowsPerPage = value;
+                      }
+                    },
+                    renderEmptyRowsInTheEnd: false,
+                    showFirstLastButtons: true,
+                    empty: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [Text('Belum ada data')],
+                    ),
+                    headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => Colors.grey[400],
+                    ),
+                    headingRowHeight: 40,
+                    actions: [
+                      Visibility(
+                        visible: isWideScreen ? true : false,
+                        child: SizedBox(
+                          width: 150,
+                          height: 35,
+                          child: CsTextField(
+                            // readOnly: false,
+                            controller: stokOutC.searchController,
+                            label: 'Search Data',
+                            onChanged: (val) {
+                              stokOutC.filterDataStokOut(val);
+                              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                              stokOutC.dataSourceOut.notifyListeners();
+                            },
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          addEditStokOut(
+                            context,
+                            '',
+                            '',
+                            '',
+                            '',
+                            '',
+                            RxList.empty(),
+                          );
+                          await stokOutC.generateNumbId();
+                          // print(stokOutC.idTrx);
+                        },
+                        icon: const Icon(HugeIcons.strokeRoundedAddCircle),
+                      ),
+                    ],
+                    header: const Text(
+                      'BARANG KELUAR',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    columns: const [
+                      DataColumn(label: Text('ID')),
+                      DataColumn(label: Text('Pengirim')),
+                      DataColumn(label: Text('Penerima')),
+                      DataColumn2(
+                        label: Text('Keterangan'),
+                        size: ColumnSize.L,
+                      ),
+                      DataColumn2(label: Text('Total'), fixedWidth: 80),
+                      DataColumn2(label: Text('Dibuat oleh'), fixedWidth: 135),
+                      DataColumn2(label: Text('Tanggal'), fixedWidth: 100),
+                      DataColumn2(label: Text('Status'), fixedWidth: 80),
+                      DataColumn2(label: Text('Action'), fixedWidth: 90),
+                    ],
+                    source: stokOutC.dataSourceOut,
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(child: Text(snapshot.error.toString()));
+                }
+                return const Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Memuat data... '),
+                      CupertinoActivityIndicator(),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          floatingActionButton:
+              !isWideScreen
+                  ? FloatingActionButton(
+                    onPressed: () {
+                      seachForm(context);
+                    },
+                    child: const Icon(Icons.search),
+                  )
+                  : null,
+        );
+      },
     );
   }
+}
+
+seachForm(context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.all(8),
+            content: SizedBox(
+              width: 150,
+              height: 35,
+              child: CsTextField(
+                // readOnly: false,
+                controller: stokOutC.searchController,
+                maxLines: 1,
+                label: 'Search Data',
+                onChanged: (val) {
+                  stokOutC.filterDataStokOut(val);
+                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                  stokOutC.dataSourceOut.notifyListeners();
+                },
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class StokOutData extends DataTableSource {
@@ -192,7 +247,7 @@ class StokOutData extends DataTableSource {
                         await stokOutC.getStokOutData(stokOutC.fromBranch);
                         stokOutC.filterDataStokOut("");
                         // ignore: invalid_use_of_protected_member
-                        stokOutC.dataSource.notifyListeners();
+                        stokOutC.dataSourceOut.notifyListeners();
                       },
                       isWideScreen,
                     );

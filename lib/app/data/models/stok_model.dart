@@ -2,7 +2,8 @@ class Stok {
   late String? barcode;
   late String? assetName;
   late String? category;
-  late String? cabang;
+  late String? kodeCabang;
+  late String? namaCabang;
   late String? stokIn;
   late String? stokOut;
   late String? good;
@@ -13,7 +14,8 @@ class Stok {
       {this.barcode,
       this.assetName,
       this.category,
-      this.cabang,
+      this.kodeCabang,
+      this.namaCabang,
       this.stokIn,
       this.stokOut,
       this.good,
@@ -22,7 +24,8 @@ class Stok {
 
   Stok.fromJson(Map<String, dynamic> json) {
     barcode = json['barcode'];
-    cabang = json['cabang'];
+    kodeCabang = json['kode_cabang'];
+    namaCabang = json['nama_cabang'];
     assetName = json['asset_name'];
     category = json['category_name']??'';
     stokIn = json['in'];

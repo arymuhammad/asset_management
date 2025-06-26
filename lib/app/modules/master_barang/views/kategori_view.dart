@@ -40,6 +40,7 @@ class KategoriView extends GetView {
                     // isVerticalScrollBarVisible: true,
                     // columnSpacing: 100,
                     // horizontalMargin: 40,
+                  
                     smRatio: 1.1, // Rasio lebar kolom S terhadap M
                     lmRatio: 2.0,
                     rowsPerPage: masterC.rowsPerPage,
@@ -52,6 +53,10 @@ class KategoriView extends GetView {
                     renderEmptyRowsInTheEnd: false,
                     showFirstLastButtons: true,
                     empty: const Text('Belum ada data'),
+                      headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => Colors.grey[400],
+                    ),
+                    headingRowHeight: 40,
                     actions: [
                       SizedBox(
                         width: 150,
@@ -61,7 +66,7 @@ class KategoriView extends GetView {
                           onChanged: (val) {
                             masterC.filterDataCatAsset(val);
                             // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
-                           assetC.dataSourceMydata.notifyListeners();
+                            assetC.dataSourceMydata.notifyListeners();
                           },
                         ),
                       ),

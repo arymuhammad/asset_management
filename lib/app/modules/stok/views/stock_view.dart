@@ -1,5 +1,7 @@
+import 'package:assets_management/app/data/helper/const.dart';
 import 'package:assets_management/app/data/models/login_model.dart';
 import 'package:assets_management/app/data/models/stok_model.dart';
+import 'package:assets_management/app/modules/barang_masuk/views/widget/add_edit_stok_in.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,89 +10,140 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../data/shared/text_field.dart';
 import '../controllers/stok_controller.dart';
+import 'widget/detail_stock.dart';
 
 class StockView extends GetView {
-  StockView({super.key, this.userData}) {
-    dataSource = StokData(dataStok: stokC.dataStokFiltered);
-  }
+  StockView({super.key, this.userData});
 
-  late final StokData dataSource;
+
   final Data? userData;
   final stokC = Get.put(StokController());
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: FutureBuilder(
-          future: stokC.getStok(userData!.kodeCabang!),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return PaginatedDataTable2(
-                minWidth: 1300,
-                columnSpacing: 20,
-                isHorizontalScrollBarVisible: true,
-                isVerticalScrollBarVisible: true,
-                // columnSpacing: 100,
-                // horizontalMargin: 40,
-                smRatio: 0.9, // Rasio lebar kolom S terhadap M
-                lmRatio: 2.0,
-                // fixedLeftColumns: 1,
-                availableRowsPerPage: const [5, 10, 20, 50, 100],
-                showFirstLastButtons: true,
-                onRowsPerPageChanged: (value) {
-                  if (value != null) {
-                    stokC.rowsPerPage = value;
-                  }
-                },
-                renderEmptyRowsInTheEnd: false,
-                empty: const Text('Belum ada data'),
-                actions: [
-                  SizedBox(
-                    width: 150,
-                    height: 35,
-                    child: CsTextField(
-                      label: 'Search Data',
-                      onChanged: (val) {
-                        stokC.filterDataStok(val);
-                        // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
-                        dataSource.notifyListeners();
-                      },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWideScreen = constraints.maxWidth >= 800;
+        return Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: FutureBuilder(
+              future: stokC.getStok(userData!.kodeCabang!),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  stokC.branchCode = userData!.kodeCabang!;
+                  return PaginatedDataTable2(
+                    minWidth: 1300,
+                    columnSpacing: 20,
+                    // columnSpacing: 100,
+                    // horizontalMargin: 40,
+                    smRatio: 0.9, // Rasio lebar kolom S terhadap M
+                    lmRatio: 2.0,
+                    // fixedLeftColumns: 1,
+                    availableRowsPerPage: const [5, 10, 20, 50, 100],
+                    showFirstLastButtons: true,
+                    onRowsPerPageChanged: (value) {
+                      if (value != null) {
+                        stokC.rowsPerPage = value;
+                      }
+                    },
+                    renderEmptyRowsInTheEnd: false,
+                    empty: const Text('Belum ada data'),
+                    headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => Colors.grey[400],
                     ),
+                    headingRowHeight: 40,
+                    actions: [
+                      Visibility(
+                        visible: isWideScreen ? true : false,
+                        child: SizedBox(
+                          width: 150,
+                          height: 35,
+                          child: CsTextField(
+                            controller: stokC.searchController,
+                            label: 'Search Data',
+                            maxLines: 1,
+                            onChanged: (val) {
+                              stokC.filterDataStok(val);
+                              // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+                              stokC.dataSource.notifyListeners();
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                    header: const Text('STOCK'),
+                    columns: const [
+                      DataColumn2(label: Text('Kode Asset'), fixedWidth: 205),
+                      DataColumn2(label: Text('Nama Asset'), fixedWidth: 185),
+                      DataColumn2(label: Text('Cabang'), fixedWidth: 185),
+                      DataColumn2(label: Text('Kategori'), fixedWidth: 180),
+                      DataColumn2(label: Text('IN'), fixedWidth: 70),
+                      DataColumn2(label: Text('OUT'), fixedWidth: 70),
+                      DataColumn2(label: Text('TOTAL'), fixedWidth: 70),
+                      DataColumn2(label: Text('GOOD'), fixedWidth: 70),
+                      DataColumn2(label: Text('BAD'), fixedWidth: 70),
+                      // DataColumn(label: Text('Action')),
+                    ],
+                    source: stokC.dataSource,
+                  );
+                } else if (snapshot.hasError) {
+                  return Text('${snapshot.error}');
+                }
+                return const Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Memuat data... '),
+                      CupertinoActivityIndicator(),
+                    ],
                   ),
-                ],
-                header: const Text('STOCK'),
-                columns: const [
-                  DataColumn2(label: Text('Kode Asset'), fixedWidth: 205),
-                  DataColumn2(label: Text('Nama Asset'), fixedWidth: 185),
-                  DataColumn2(label: Text('Cabang'), fixedWidth: 185),
-                  DataColumn2(label: Text('Kategori'), fixedWidth: 180),
-                  DataColumn2(label: Text('IN'), fixedWidth: 70),
-                  DataColumn2(label: Text('OUT'), fixedWidth: 70),
-                  DataColumn2(label: Text('TOTAL'), fixedWidth: 70),
-                  DataColumn2(label: Text('GOOD'), fixedWidth: 70),
-                  DataColumn2(label: Text('BAD'), fixedWidth: 70),
-                  // DataColumn(label: Text('Action')),
-                ],
-                source: dataSource,
-              );
-            } else if (snapshot.hasError) {
-              return Text('${snapshot.error}');
-            }
-            return const Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Memuat data... '),
-                  CupertinoActivityIndicator(),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+                );
+              },
+            ),
+          ),
+          floatingActionButton:
+              !isWideScreen
+                  ? FloatingActionButton(
+                    onPressed: () {
+                      seachForm(context);
+                    },
+                    child: const Icon(Icons.search),
+                  )
+                  : null,
+        );
+      },
     );
   }
+}
+
+seachForm(context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.all(8),
+            content: SizedBox(
+              width: 150,
+              height: 35,
+              child: CsTextField(
+                // readOnly: false,
+                controller: stokC.searchController,
+                maxLines: 1,
+                label: 'Search Data',
+                onChanged: (val) {
+                  stokC.filterDataStok(val);
+                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                  stokC.dataSource.notifyListeners();
+                },
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class StokData extends DataTableSource {
@@ -134,22 +187,71 @@ class StokData extends DataTableSource {
           ),
         ),
         DataCell(Text(item.assetName!)),
-        DataCell(Text(item.cabang!)),
+        DataCell(Text(item.namaCabang!)),
         DataCell(Text(item.category!)),
         DataCell(
-          CsContainerColor(color: Colors.greenAccent[700]!,
-            child: Text(item.stokIn!, style: const TextStyle(color: Colors.white)),
+          InkWell(
+            onTap: () {
+              stokC.grandTotal.value = 0;
+              detailStock(
+                Get.context!,
+                'IN',
+                item.barcode!,
+                item.assetName!,
+                item.kodeCabang!,
+              );
+            },
+            child: CsContainerColor(
+              color: darkGreen,
+              child: Text(
+                item.stokIn!,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         ),
         DataCell(
-          CsContainerColor(
-            color: Colors.redAccent[700]!,
-            child: Text(item.stokOut!, style: const TextStyle(color: Colors.white)),
+          InkWell(
+            onTap: () {
+              stokC.grandTotal.value = 0;
+              detailStock(
+                Get.context!,
+                'OUT',
+                item.barcode!,
+                item.assetName!,
+                item.kodeCabang!,
+              );
+            },
+            child: CsContainerColor(
+              color: Colors.redAccent[700]!,
+              child: Text(
+                item.stokOut!,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         ),
-        DataCell(CsContainerColor(
-          color: Colors.blueAccent[700]!,
-          child: Text('${int.parse(item.stokIn!) - int.parse(item.stokOut!)}', style: const TextStyle(color: Colors.white)))),
+        DataCell(
+          InkWell(
+            onTap: () {
+              stokC.grandTotal.value = 0;
+              detailStock(
+                Get.context!,
+                'SUMMARY', // <-- PENTING: gunakan 'SUMMARY'
+                item.barcode!,
+                item.assetName!,
+                item.kodeCabang!,
+              );
+            },
+            child: CsContainerColor(
+              color: Colors.blueAccent[700]!,
+              child: Text(
+                '${int.parse(item.stokIn!) - int.parse(item.stokOut!)}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ),
         DataCell(Text(item.good!)),
         DataCell(Text(item.bad!)),
 

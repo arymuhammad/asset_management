@@ -4,7 +4,8 @@ class AssetsModel {
   late String? assetName;
   late String? assetsCode;
   late String? image;
-  late String? category;
+  late String? categoryId;
+  late String? categoryName;
   late String? price;
   late String? satuan;
   late String? stock;
@@ -18,7 +19,8 @@ class AssetsModel {
       this.assetName,
       this.image,
       this.assetsCode,
-      this.category,
+      this.categoryId,
+      this.categoryName,
       this.price,
       this.satuan,
       this.stock,
@@ -32,7 +34,8 @@ class AssetsModel {
     assetName = json['asset_name'];
     assetsCode = json['asset_code'];  
     image = json['image']??'';  
-    category = json['category_name']??'';
+    categoryId = json['cat_id']??'';
+    categoryName = json['category_name']??'';
     price = json['price'];
     satuan = json['unit']??'';
     stock = json['stok_awal']??'';

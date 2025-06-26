@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:assets_management/app/modules/dashboard/views/dashboard_view.dart';
 import 'package:assets_management/app/modules/dashboard/views/navbar.dart';
+import 'package:assets_management/app/modules/dashboard/views/widget/persistant_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -42,9 +44,11 @@ void main() async {
         home: Obx(
           () =>
               auth.isAuth.value
-                  ? NavBarView(
-                    userData: auth.logUser.value,
-                  )
+                  ? 
+                  PersistentSidebarLayout(userData: auth.logUser.value)
+                  // NavBarView(
+                  //   userData: auth.logUser.value,
+                  // )
                   : const LoginView(),
         ),
         // localizationsDelegates: const [

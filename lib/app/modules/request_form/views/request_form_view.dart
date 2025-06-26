@@ -13,124 +13,166 @@ import 'widget/add_request.dart';
 class RequestFormView extends GetView<RequestFormController> {
   RequestFormView({super.key});
 
-  final requestC = Get.find<RequestFormController>();
+  final requestC = Get.put(RequestFormController());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Obx(() {
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child:
-              requestC.isLoading.value
-                  ? const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWideScreen = constraints.maxWidth >= 800;
+        return Scaffold(
+          body: Obx(() {
+            return Padding(
+              padding: const EdgeInsets.all(12),
+              child:
+                  requestC.isLoading.value
+                      ? const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Memuat data... '),
-                          CupertinoActivityIndicator(),
-                        ],
-                      ),
-                    ],
-                  )
-                  : Theme(
-                    data: Theme.of(context).copyWith(
-                      cardColor: Colors.blueGrey[50],
-                      dividerColor: Colors.grey[300],
-                      textTheme: const TextTheme(
-                        bodyMedium: TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    child: PaginatedDataTable2(
-                      minWidth: 1300,
-                      wrapInCard: true,
-                      columnSpacing: 20,
-                      horizontalMargin: 12,
-                      // columnSpacing: 100,
-                      // horizontalMargin: 40,
-                      smRatio: 0.9, // Rasio lebar kolom S terhadap M
-                      lmRatio: 2.0,
-                      // fixedLeftColumns: 1,
-                      rowsPerPage: requestC.rowsPerPage,
-                      availableRowsPerPage: const [5, 10, 20, 50, 100],
-                      onRowsPerPageChanged: (value) {
-                        if (value != null) {
-                          requestC.rowsPerPage = value;
-                        }
-                      },
-                      renderEmptyRowsInTheEnd: false,
-                      showFirstLastButtons: true,
-                      empty: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [Text('Belum ada data')],
-                      ),
-                      headingRowColor: WidgetStateProperty.resolveWith(
-                        (states) => Colors.grey[400],
-                      ),
-                      headingRowHeight: 40,
-
-                      actions: [
-                        SizedBox(
-                          width: 150,
-                          height: 35,
-                          child: CsTextField(
-                            // readOnly: false,
-                            label: 'Search Data',
-                            onChanged: (val) {
-                              requestC.filterDataRequest(val);
-                              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                              requestC.requestData.notifyListeners();
-                            },
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Memuat data... '),
+                              CupertinoActivityIndicator(),
+                            ],
                           ),
+                        ],
+                      )
+                      : PaginatedDataTable2(
+                        minWidth: 1300,
+                        wrapInCard: true,
+                        columnSpacing: 20,
+                        horizontalMargin: 12,
+                        // columnSpacing: 100,
+                        // horizontalMargin: 40,
+                        smRatio: 0.9, // Rasio lebar kolom S terhadap M
+                        lmRatio: 2.0,
+                        // fixedLeftColumns: 1,
+                        rowsPerPage: requestC.rowsPerPage,
+                        availableRowsPerPage: const [5, 10, 20, 50, 100],
+                        onRowsPerPageChanged: (value) {
+                          if (value != null) {
+                            requestC.rowsPerPage = value;
+                          }
+                        },
+                        renderEmptyRowsInTheEnd: false,
+                        showFirstLastButtons: true,
+                        empty: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [Text('Belum ada data')],
                         ),
-                        IconButton(
-                          onPressed: () async {
-                            addRequest(context, RxList.empty(), '');
-                            await requestC.generateId();
-                            // print(requestC.idReport);
-                          },
-                          icon: const Icon(HugeIcons.strokeRoundedAddCircle),
+                        headingRowColor: WidgetStateProperty.resolveWith(
+                          (states) => Colors.grey[400],
                         ),
-                      ],
-                      header: const Text(
-                        'Requst Form',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                        headingRowHeight: 40,
+
+                        actions: [
+                          Visibility(
+                            visible: isWideScreen ? true : false,
+                            child: SizedBox(
+                              width: 150,
+                              height: 35,
+                              child: CsTextField(
+                                // readOnly: false,
+                                controller: requestC.searchController,
+                                maxLines: 1,
+                                label: 'Search Data',
+                                onChanged: (val) {
+                                  requestC.filterDataRequest(val);
+                                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                                  requestC.requestData.notifyListeners();
+                                },
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () async {
+                              addRequest(context, '', '', '', RxList.empty());
+                              await requestC.generateId();
+                              // print(requestC.idReport);
+                            },
+                            icon: const Icon(HugeIcons.strokeRoundedAddCircle),
+                            tooltip: 'Add Request',
+                          ),
+                        ],
+                        header: const Text(
+                          'Requst Form',
+                          style: TextStyle(fontSize: 20),
                         ),
+                        columns: const [
+                          // DataColumn2(label: Text('ID'), fixedWidth: 150),
+                          DataColumn2(
+                            label: Center(child: Text('STORE')),
+                            fixedWidth: 180,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('REQUEST DESCRIPTION')),
+                            fixedWidth: 320,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('CATEGORY')),
+                            fixedWidth: 200,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('CREATED BY')),
+                            fixedWidth: 170,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('DATE')),
+                            fixedWidth: 120,
+                          ),
+                          DataColumn2(
+                            label: Center(child: Text('ACTION')),
+                            fixedWidth: 120,
+                          ),
+                        ],
+                        source: requestC.requestData,
                       ),
-                      columns: const [
-                        // DataColumn2(label: Text('ID'), fixedWidth: 150),
-                        DataColumn2(
-                          label: Center(child: Text('STORE')),
-                          fixedWidth: 230,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('REQUEST DESCRIPTION')),
-                          fixedWidth: 320,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('CREATED BY')),
-                          fixedWidth: 170,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('DATE')),
-                          fixedWidth: 150,
-                        ),
-                        DataColumn2(
-                          label: Center(child: Text('ACTION')),
-                          fixedWidth: 150,
-                        ),
-                      ],
-                      source: requestC.requestData,
-                    ),
-                  ),
+            );
+          }),
+          floatingActionButton:
+              !isWideScreen
+                  ? FloatingActionButton(
+                    onPressed: () {
+                      seachForm(context);
+                    },
+                    child: const Icon(Icons.search),
+                  )
+                  : null,
         );
-      }),
+      },
     );
   }
+}
+
+seachForm(context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.all(8),
+            content: SizedBox(
+              width: 150,
+              height: 35,
+              child: CsTextField(
+                // readOnly: false,
+                controller: requestC.searchController,
+                maxLines: 1,
+                label: 'Search Data',
+                onChanged: (val) {
+                  requestC.filterDataRequest(val);
+                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                  requestC.requestData.notifyListeners();
+                },
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class RequestData extends DataTableSource {
@@ -145,21 +187,6 @@ class RequestData extends DataTableSource {
     }
     final item = dataRequest[index];
 
-    Color getStatusColor(String status) {
-      switch (status.toUpperCase()) {
-        case 'ON PROGRESS':
-          return Colors.yellow;
-        case 'DONE':
-          return Colors.green;
-        case 'HOLD':
-          return Colors.red;
-        // case 'OPEN':
-        //   return Colors.orange;
-        default:
-          return Colors.blue;
-      }
-    }
-
     return DataRow.byIndex(
       index: index,
       cells: [
@@ -172,19 +199,16 @@ class RequestData extends DataTableSource {
               child: InkWell(
                 onTap: () async {
                   loadingDialog("Memuat data...", "");
-                  // await reportC.getDetailReport(item.id!);
-                  // Get.back();
-                  // editReport(
-                  //   Get.context!,
-                  //   item.id!,
-                  //   item.cabang!,
-                  //   '',
-                  //   '',
-                  //   '',
-                  //   '',
-                  //   '',
-                  //   item.createdAt!,
-                  // );
+                  await requestC.getDetailRequest(item.id!);
+                  Get.back();
+                  requestC.grandTotal.value = 0;
+                  addRequest(
+                    Get.context!,
+                    item.id!,
+                    item.desc!,
+                    item.category!,
+                    requestC.detailRequest,
+                  );
                 },
                 child: Text(
                   item.branch!,
@@ -197,16 +221,8 @@ class RequestData extends DataTableSource {
             ),
           ),
         ),
-        DataCell(
-          Center(
-            child: Text(
-              item.desc!,
-              // softWrap: true,
-              // maxLines: 2, // Atur sesuai kebutuhan
-              // overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
+        DataCell(Center(child: Text(item.desc!))),
+        DataCell(Center(child: Text(item.categoryName!))),
         DataCell(Center(child: Text(item.createdBy!))),
         DataCell(
           Center(
@@ -224,19 +240,9 @@ class RequestData extends DataTableSource {
                   // tooltip: item.status! == "ON PROGRESS" ? 'Edit' : 'Show Detail',
                   onPressed: () async {
                     loadingDialog("Memuat data...", "");
-                    // await reportC.getDetailReport(item.id!);
+                    await requestC.getDetailRequest(item.id!);
                     Get.back();
-                    // editReport(
-                    //   Get.context!,
-                    //   item.id!,
-                    //   item.cabang!,
-                    //   '',
-                    //   '',
-                    //   '',
-                    //   '',
-                    //   '',
-                    //   item.createdAt!,
-                    // );
+                    requestC.printReqForm();
                   },
                   icon: const Icon(
                     Icons.print,
@@ -245,17 +251,30 @@ class RequestData extends DataTableSource {
                   ),
                   splashRadius: 10,
                 ),
-                IconButton(
-                  // tooltip: item.status! == "OPEN" ? 'Cancel' : 'Delete',
-                  onPressed: () {
-                    // stokC.deleteAssetCategories(item.id!);
-                  },
-                  icon: Icon(
-                    Icons.edit_document,
-                    size: 20,
-                    color: Colors.greenAccent[700],
+                Visibility(
+                  visible: requestC.branchCode != "HO000" ? false : true,
+                  child: IconButton(
+                    // tooltip: item.status! == "OPEN" ? 'Cancel' : 'Delete',
+                    onPressed: () async {
+                      loadingDialog("Memuat data...", "");
+                      await requestC.getDetailRequest(item.id!);
+                      Get.back();
+                      requestC.grandTotal.value = 0;
+                      addRequest(
+                        Get.context!,
+                        item.id!,
+                        item.desc!,
+                        item.category!,
+                        requestC.detailRequest,
+                      );
+                    },
+                    icon: Icon(
+                      Icons.edit_document,
+                      size: 20,
+                      color: Colors.greenAccent[700],
+                    ),
+                    splashRadius: 10,
                   ),
-                  splashRadius: 10,
                 ),
               ],
             ),

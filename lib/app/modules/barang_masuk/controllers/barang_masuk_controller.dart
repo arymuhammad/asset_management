@@ -24,12 +24,12 @@ class BarangMasukController extends GetxController {
   var toBranch = "".obs;
   final formKey = GlobalKey<FormState>();
   var tempAssetData = <DetailBarangMasukKeluar>[].obs;
-  var tempScanData = [].obs;
+  var tempScanData = <DetailBarangMasukKeluar>[].obs;
   var finalTempScanData = [].obs;
   var idTrx = "";
   var fromBranch = "";
   var author = "";
-  late TextEditingController scanInput, desc;
+  late TextEditingController scanInput, desc, searchController;
   late StokInData dataSource;
 
   @override
@@ -45,6 +45,7 @@ class BarangMasukController extends GetxController {
     scanInput = TextEditingController();
     getBrand();
     desc = TextEditingController();
+    searchController = TextEditingController();
   }
 
   @override
@@ -128,7 +129,7 @@ class BarangMasukController extends GetxController {
                 .fold(0, (prev, qty) => prev + int.parse(qty!))
             : tempScanData
                 .map((e) => e.qtyIn)
-                .fold(0, (prev, qty) => prev + int.parse(qty));
+                .fold(0, (prev, qty) => prev + int.parse(qty!));
     // print(amount);
     var data = {
       "type": type,
@@ -147,7 +148,8 @@ class BarangMasukController extends GetxController {
     for (var lstData in detailStokIn.isNotEmpty ? detailStokIn : tempScanData) {
       var detailData = {
         "type": "add_detail_stokIn",
-        "branch_code": kodePenerima != "" ? kodePenerima : fromBranch,
+        "from": kodePengirim != "" ? kodePengirim : fromBranch,
+        "to": kodePenerima != "" ? kodePenerima : fromBranch,
         "id": id != "" ? id : idTrx,
         "asset_code": lstData.assetCode,
         "asset_name": lstData.assetName,
@@ -163,6 +165,7 @@ class BarangMasukController extends GetxController {
     scanInput.clear();
     tempScanData.clear();
     detailStokIn.clear();
+
     Get.back();
     dialogMsgScsUpd('Info', 'Sukses');
   }
@@ -184,7 +187,7 @@ class BarangMasukController extends GetxController {
                 .fold(0, (prev, qty) => prev + int.parse(qty!))
             : tempScanData
                 .map((e) => e.qtyIn)
-                .fold(0, (prev, qty) => prev + int.parse(qty));
+                .fold(0, (prev, qty) => prev + int.parse(qty!));
 
     var data = {
       "type": type,

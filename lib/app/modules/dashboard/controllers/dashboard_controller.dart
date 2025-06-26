@@ -1,39 +1,45 @@
 // import 'package:easy_sidemenu/easy_sidemenu.dart';
-import 'package:assets_management/app/routes/app_pages.dart';
+import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
-  var selectedMenu = 0.obs;
-  var currentRoute = Routes.DASHBOARD.obs;
-  final ScrollController scrollController = ScrollController();
-  double scrollPosition = 0;
-  double opacity = 0;
-  // PageController pageController = PageController();
-  // SideMenuController sideMenu = SideMenuController();
-    // GlobalKey untuk nested Navigator
+  var currentPageIndex = 0.obs;
+  // var expandedMaster = false.obs;
+  late PageController pageController;
+  late SideMenuController sideMenu;
+
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void onInit() {
-    // sideMenu.addListener((index) {
-    //   pageController.jumpToPage(index);
-    // });
     super.onInit();
-    scrollController.addListener(scrollListener);
-  }
+    pageController = PageController();
+    sideMenu = SideMenuController();
+    // Listener sideMenu untuk sinkronisasi ke pageController
+    sideMenu.addListener((int index) {
+      final pageIndex =
+          pageController.hasClients ? pageController.page?.round() ?? 0 : 0;
+      if (index != pageIndex) {
+        pageController.jumpToPage(index);
+      }
+    });
 
-  @override
-  void onReady() {
-    super.onReady();
+    // Listener pageController untuk sinkronisasi ke sideMenu
+    pageController.addListener(() {
+      if (!pageController.hasClients) return;
+
+    final pageIndex = pageController.page?.round() ?? 0;
+    if (sideMenu.currentPage != pageIndex) {
+      sideMenu.changePage(pageIndex);
+    }
+    });
   }
 
   @override
   void onClose() {
-    super.onClose();
-  }
-
-  scrollListener() {
-    scrollPosition = scrollController.position.pixels;
+    pageController.dispose();
+    sideMenu.dispose();
+    super.dispose();
   }
 }

@@ -9,6 +9,7 @@ var defaultColor = Colors.black;
 var bgContainer = Colors.blue[50];
 var red = Colors.redAccent[700];
 var green = Colors.greenAccent[700]!;
+var darkGreen = const Color.fromARGB(255, 3, 136, 7);
 
 var titleTextStyle = const TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
 var subtitleTextStyle = TextStyle(

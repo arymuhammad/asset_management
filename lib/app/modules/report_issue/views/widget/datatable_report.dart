@@ -7,6 +7,7 @@ import 'package:assets_management/app/modules/report_issue/views/widget/edit_rep
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:widget_zoom/widget_zoom.dart';
 
 import '../../../../data/Repo/service_api.dart';
@@ -50,7 +51,10 @@ class DatatableReport extends StatelessWidget {
                 const DataColumn2(label: Text('Progress'), size: ColumnSize.M),
                 const DataColumn2(label: Text('Status'), size: ColumnSize.M),
                 const DataColumn2(label: Text('Issue'), size: ColumnSize.M),
-                const DataColumn2(label: Text('Keterangan'), size: ColumnSize.M),
+                const DataColumn2(
+                  label: Text('Keterangan'),
+                  size: ColumnSize.M,
+                ),
                 const DataColumn2(label: Text('Action'), fixedWidth: 110),
               ],
         ],
@@ -64,7 +68,20 @@ class DatatableReport extends StatelessWidget {
                           onTap: () {
                             // Handle image tap if needed
                           },
-                          child: WidgetZoom(
+                          child: 
+                          // PhotoView(
+                            
+                          //   imageProvider:
+                          //       report.imageBf!.contains('reports/')
+                          //           ? NetworkImage(
+                          //             '${ServiceApi().baseUrl}${report.imageBf!}',
+                          //           )
+                          //           : MemoryImage(
+                          //             base64Decode(report.imageBf!),
+                          //           ),
+                          // ),
+
+                          WidgetZoom(
                             heroAnimationTag: 'reportImage${report.id}',
                             zoomWidget: ClipRRect(
                               child:

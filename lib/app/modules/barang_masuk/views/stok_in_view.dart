@@ -18,15 +18,16 @@ class StokInView extends GetView {
   late final StokInData dataSource;
   final Data? userData;
   final stokInC = Get.put(BarangMasukController());
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            bool isWideScreen = constraints.maxWidth >= 800;
-            return FutureBuilder(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWideScreen = constraints.maxWidth >= 800;
+        return Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: FutureBuilder(
               future: stokInC.getStokInData(userData!.kodeCabang!),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
@@ -37,8 +38,6 @@ class StokInView extends GetView {
                   return PaginatedDataTable2(
                     minWidth: 1300,
                     columnSpacing: 20,
-                    isHorizontalScrollBarVisible: true,
-                    isVerticalScrollBarVisible: true,
                     // columnSpacing: 100,
                     // horizontalMargin: 40,
                     smRatio: 0.9, // Rasio lebar kolom S terhadap M
@@ -55,26 +54,32 @@ class StokInView extends GetView {
                     showFirstLastButtons: true,
                     empty: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Belum ada data'),
-                      ],
+                      children: [Text('Belum ada data')],
                     ),
+                    headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => Colors.grey[400],
+                    ),
+                    headingRowHeight: 40,
                     actions: [
-                      SizedBox(
-                        width: 150,
-                        height: 35,
-                        child: CsTextField(
-                          // readOnly: false,
-                          label: 'Search Data',
-                          onChanged: (val) {
-                            stokInC.filterDataStokIn(val);
-                            // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                            stokInC.dataSource.notifyListeners();
-                          },
+                      Visibility(
+                        visible: isWideScreen ? true : false,
+                        child: SizedBox(
+                          width: 150,
+                          height: 35,
+                          child: CsTextField(
+                            // readOnly: false,
+                            controller: stokInC.searchController,
+                            label: 'Search Data',
+                            onChanged: (val) {
+                              stokInC.filterDataStokIn(val);
+                              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                              stokInC.dataSource.notifyListeners();
+                            },
+                          ),
                         ),
                       ),
                       IconButton(
-                        onPressed: () {
+                        onPressed: () async {
                           addEditStokIn(
                             context,
                             '',
@@ -89,12 +94,15 @@ class StokInView extends GetView {
                             '',
                             RxList.empty(),
                           );
-                          stokInC.generateNumbId();
+                          await stokInC.generateNumbId();
                         },
                         icon: const Icon(HugeIcons.strokeRoundedAddCircle),
                       ),
                     ],
-                    header: const Text('BARANG MASUK'),
+                    header: const Text(
+                      'BARANG MASUK',
+                      style: TextStyle(fontSize: 15),
+                    ),
                     columns: const [
                       DataColumn(label: Text('ID')),
                       DataColumn(label: Text('Pengirim')),
@@ -103,14 +111,14 @@ class StokInView extends GetView {
                         label: Text('Keterangan'),
                         size: ColumnSize.L,
                       ),
-                      DataColumn2(label: Text('Total'), size: ColumnSize.S),
+                      DataColumn2(label: Text('Total'), fixedWidth: 80),
                       DataColumn2(
                         label: Text('Dibuat oleh'),
                         size: ColumnSize.M,
                       ),
-                      DataColumn(label: Text('Tanggal')),
-                      DataColumn2(label: Text('Status'), size: ColumnSize.M),
-                      DataColumn(label: Text('Action')),
+                      DataColumn2(label: Text('Tanggal'), fixedWidth: 100),
+                      DataColumn2(label: Text('Status'), fixedWidth: 80),
+                      DataColumn2(label: Text('Action'), fixedWidth: 90),
                     ],
                     source: stokInC.dataSource,
                   );
@@ -127,12 +135,51 @@ class StokInView extends GetView {
                   ),
                 );
               },
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+          floatingActionButton:
+              !isWideScreen
+                  ? FloatingActionButton(
+                    onPressed: () {
+                      seachForm(context);
+                    },
+                    child: const Icon(Icons.search),
+                  )
+                  : null,
+        );
+      },
     );
   }
+}
+
+seachForm(context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.all(8),
+            content: SizedBox(
+              width: 150,
+              height: 35,
+              child: CsTextField(
+                // readOnly: false,
+                controller: stokInC.searchController,
+                maxLines: 1,
+                label: 'Search Data',
+                onChanged: (val) {
+                  stokInC.filterDataStokIn(val);
+                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                  stokInC.dataSource.notifyListeners();
+                },
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class StokInData extends DataTableSource {
@@ -216,12 +263,12 @@ class StokInData extends DataTableSource {
                       () async {
                         await stokInC.deleteStokIn(item.id!);
                         await stokInC.getStokInData(stokInC.fromBranch);
-                        stokInC.filterDataStokIn("");
-                        // ignore: invalid_use_of_protected_member
-                        stokInC.dataSource.notifyListeners();
                       },
                       isWideScreen,
                     );
+                    stokInC.filterDataStokIn("");
+                    // ignore: invalid_use_of_protected_member
+                    stokInC.dataSource.notifyListeners();
                   },
                   icon: Icon(Icons.remove_circle_outline, size: 20, color: red),
                   splashRadius: 10,

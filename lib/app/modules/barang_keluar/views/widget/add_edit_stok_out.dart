@@ -1,16 +1,13 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
-
 import 'package:assets_management/app/data/helper/const.dart';
 import 'package:assets_management/app/data/helper/custom_dialog.dart';
 import 'package:assets_management/app/data/models/detail_barang_masuk_keluar_model.dart';
 import 'package:assets_management/app/data/shared/dropdown.dart';
 import 'package:assets_management/app/data/shared/elevated_button.dart';
 import 'package:assets_management/app/data/shared/text_field.dart';
-import 'package:data_table_2/data_table_2.dart';
+import 'package:assets_management/app/modules/barang_keluar/views/widget/datatable_stok_out.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-
 import '../../controllers/barang_keluar_controller.dart';
 
 final stokOutC = Get.put(BarangKeluarController());
@@ -29,6 +26,7 @@ addEditStokOut(
 
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (context) {
       return Form(
         key: stokOutC.formKey,
@@ -237,335 +235,12 @@ addEditStokOut(
                     ),
                     SizedBox(
                       height: 250,
-                      child: Obx(
-                        () => DataTable2(
-                          empty: const Center(child: Text('Belum ada data')),
-                          lmRatio: 1,
-                          minWidth: 1000,
-                          isHorizontalScrollBarVisible: true,
-                          isVerticalScrollBarVisible: true,
-                          fixedLeftColumns: 1,
-                          columns: [
-                            const DataColumn2(
-                              label: Text('Asset Name'),
-                              fixedWidth: 190,
-                            ),
-                            const DataColumn2(
-                              label: Text('Asset Code'),
-                              fixedWidth: 200,
-                            ),
-                            const DataColumn2(
-                              label: Text('Qty Total'),
-                              fixedWidth: 120,
-                            ),
-                            const DataColumn2(
-                              label: Text('Qty Good'),
-                              fixedWidth: 120,
-                            ),
-                            const DataColumn2(
-                              label: Text('Qty Bad'),
-                              fixedWidth: 120,
-                            ),
-                            DataColumn2(
-                              label:
-                                  statusData == "OPEN" || statusData == ""
-                                      ? const Text('Action')
-                                      : Container(),
-                              fixedWidth: 120,
-                            ),
-                          ],
-                          rows:
-                              detailData!.isNotEmpty
-                                  ? detailData
-                                      .map(
-                                        (e) => DataRow(
-                                          cells: [
-                                            DataCell(Text(e.assetName!)),
-                                            DataCell(Text(e.assetCode!)),
-                                            DataCell(
-                                              SizedBox(
-                                                height: 37,
-                                                child: CsTextField(
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
-                                                  enabled:
-                                                      statusData == "OPEN" ||
-                                                              statusData == ""
-                                                          ? true
-                                                          : false,
-                                                  initialValue:
-                                                      detailData.isNotEmpty
-                                                          ? e.qtyOut
-                                                          : "",
-                                                  onChanged: (val) {
-                                                    int index = stokOutC
-                                                        .detailStokOut
-                                                        .indexWhere(
-                                                          (data) =>
-                                                              data.assetCode ==
-                                                              e.assetCode,
-                                                        );
-                                                    if (index != -1) {
-                                                      if (val.isEmpty) {
-                                                        stokOutC
-                                                            .detailStokOut[index]
-                                                            .qtyOut = '0';
-                                                      } else {
-                                                        stokOutC
-                                                            .detailStokOut[index]
-                                                            .qtyOut = val;
-                                                      }
-                                                      // print(index);
-                                                    }
-                                                  },
-                                                  label: 'Total',
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              SizedBox(
-                                                height: 37,
-                                                child: CsTextField(
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
-                                                  enabled:
-                                                      statusData == "OPEN" ||
-                                                              statusData == ""
-                                                          ? true
-                                                          : false,
-                                                  label: 'Good',
-                                                  initialValue:
-                                                      detailData.isNotEmpty
-                                                          ? e.good
-                                                          : "",
-                                                  onChanged: (val) {
-                                                    int index = stokOutC
-                                                        .detailStokOut
-                                                        .indexWhere(
-                                                          (data) =>
-                                                              data.assetCode ==
-                                                              e.assetCode,
-                                                        );
-                                                    if (index != -1) {
-                                                      if (val.isEmpty) {
-                                                        stokOutC
-                                                            .detailStokOut[index]
-                                                            .good = '0';
-                                                      } else {
-                                                        stokOutC
-                                                            .detailStokOut[index]
-                                                            .good = val;
-                                                      }
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              SizedBox(
-                                                height: 37,
-                                                child: CsTextField(
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
-                                                  enabled:
-                                                      statusData == "OPEN" ||
-                                                              statusData == ""
-                                                          ? true
-                                                          : false,
-                                                  label: 'Bad',
-                                                  initialValue:
-                                                      detailData.isNotEmpty
-                                                          ? e.bad
-                                                          : "",
-                                                  onChanged: (val) {
-                                                    int index = stokOutC
-                                                        .detailStokOut
-                                                        .indexWhere(
-                                                          (data) =>
-                                                              data.assetCode ==
-                                                              e.assetCode,
-                                                        );
-                                                    if (index != -1) {
-                                                      if (val.isEmpty) {
-                                                        stokOutC
-                                                            .detailStokOut[index]
-                                                            .bad = '0';
-                                                      } else {
-                                                        stokOutC
-                                                            .detailStokOut[index]
-                                                            .bad = val;
-                                                      }
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              statusData == "OPEN" ||
-                                                      statusData == ""
-                                                  ? IconButton(
-                                                    onPressed: () {
-                                                      detailData.remove(e);
-                                                    },
-                                                    icon: Icon(
-                                                      Icons
-                                                          .highlight_remove_rounded,
-                                                      color: Colors.red[700],
-                                                    ),
-                                                  )
-                                                  : Container(),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                      .toList()
-                                  : stokOutC.tempScanData
-                                      .asMap()
-                                      .entries
-                                      .map(
-                                        (e) => DataRow(
-                                          cells: [
-                                            DataCell(Text(e.value.assetName)),
-                                            DataCell(Text(e.value.assetCode)),
-                                            DataCell(
-                                              SizedBox(
-                                                height: 37,
-                                                child: CsTextField(
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
-                                                  enabled:
-                                                      statusData == "OPEN" ||
-                                                              statusData == ""
-                                                          ? true
-                                                          : false,
-                                                  onChanged: (val) {
-                                                    int index = stokOutC
-                                                        .tempScanData
-                                                        .indexWhere(
-                                                          (data) =>
-                                                              data.assetCode ==
-                                                              e.value.assetCode,
-                                                        );
-                                                    if (index != -1) {
-                                                      if (val.isEmpty) {
-                                                        stokOutC
-                                                            .tempScanData[index]
-                                                            .qtyOut = '0';
-                                                      } else {
-                                                        stokOutC
-                                                            .tempScanData[index]
-                                                            .qtyOut = val;
-                                                      }
-                                                      // print(index);
-                                                    }
-                                                  },
-                                                  label: 'Total',
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              SizedBox(
-                                                height: 37,
-                                                child: CsTextField(
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
-                                                  enabled:
-                                                      statusData == "OPEN" ||
-                                                              statusData == ""
-                                                          ? true
-                                                          : false,
-                                                  label: 'Good',
-                                                  onChanged: (val) {
-                                                    int index = stokOutC
-                                                        .tempScanData
-                                                        .indexWhere(
-                                                          (data) =>
-                                                              data.assetCode ==
-                                                              e.value.assetCode,
-                                                        );
-                                                    if (index != -1) {
-                                                      if (val.isEmpty) {
-                                                        stokOutC
-                                                            .tempScanData[index]
-                                                            .good = '0';
-                                                      } else {
-                                                        stokOutC
-                                                            .tempScanData[index]
-                                                            .good = val;
-                                                      }
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              SizedBox(
-                                                height: 37,
-                                                child: CsTextField(
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly,
-                                                  ],
-                                                  enabled:
-                                                      statusData == "OPEN" ||
-                                                              statusData == ""
-                                                          ? true
-                                                          : false,
-                                                  label: 'Bad',
-                                                  onChanged: (val) {
-                                                    int index = stokOutC
-                                                        .tempScanData
-                                                        .indexWhere(
-                                                          (data) =>
-                                                              data.assetCode ==
-                                                              e.value.assetCode,
-                                                        );
-                                                    if (index != -1) {
-                                                      if (val.isEmpty) {
-                                                        stokOutC
-                                                            .tempScanData[index]
-                                                            .bad = '0';
-                                                      } else {
-                                                        stokOutC
-                                                            .tempScanData[index]
-                                                            .bad = val;
-                                                      }
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                            DataCell(
-                                              statusData == "OPEN" ||
-                                                      statusData == ""
-                                                  ? IconButton(
-                                                    onPressed: () {
-                                                      stokOutC.tempScanData
-                                                          .removeAt(e.key);
-                                                    },
-                                                    icon: Icon(
-                                                      Icons
-                                                          .highlight_remove_rounded,
-                                                      color: Colors.red[700],
-                                                    ),
-                                                  )
-                                                  : Container(),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                      .toList(),
-                        ),
+                      child: DatatableStokOut(
+                        stokOutData:
+                            detailData!.isNotEmpty
+                                ? detailData
+                                : stokOutC.tempScanData,
+                        statusData: statusData!,
                       ),
                     ),
                   ],
@@ -580,15 +255,22 @@ addEditStokOut(
                       if (id != ""
                           ? stokOutC.detailStokOut.isNotEmpty
                           : stokOutC.tempScanData.isNotEmpty) {
-                        if (stokOutC.formKey.currentState!.validate()) {
-                          await stokOutC.saveDataIn(
+                        if (stokOutC.toBranch.isNotEmpty) {
+                          await stokOutC.saveDataOut(
                             id != "" ? id! : "",
                             id != "" ? "update_data" : "add_stokOut",
                           );
                           await stokOutC.getStokOutData(stokOutC.fromBranch);
-                          stokOutC.filterDataStokOut("");
+                          // stokOutC.filterDataStokOut("");
                           // ignore: invalid_use_of_protected_member
-                          stokOutC.dataSource.notifyListeners();
+                          stokOutC.dataSourceOut.notifyListeners();
+                        } else {
+                          failedDialog(
+                            context,
+                            "ERROR",
+                            "Cabang tujuan tidak boleh kosong",
+                            isWideScreen,
+                          );
                         }
                       } else {
                         failedDialog(
@@ -612,15 +294,18 @@ addEditStokOut(
                       if (id != ""
                           ? stokOutC.detailStokOut.isNotEmpty
                           : stokOutC.tempScanData.isNotEmpty) {
-                        if (stokOutC.formKey.currentState!.validate()) {
-                          await stokOutC.submitDataIn(
+                        if (stokOutC.toBranch.isNotEmpty) {
+                          await stokOutC.submitDataOut(
                             id != "" ? id! : "",
                             id != "" ? "update_data" : "add_stokOut",
                           );
-                          await stokOutC.getStokOutData(stokOutC.fromBranch);
-                          // stokOutC.filterDataAsset("");
-                          // ignore: invalid_use_of_protected_member
-                          stokOutC.dataSource.notifyListeners();
+                        } else {
+                          failedDialog(
+                            context,
+                            "ERROR",
+                            "Cabang tujuan tidak boleh kosong",
+                            isWideScreen,
+                          );
                         }
                       } else {
                         failedDialog(
@@ -640,9 +325,13 @@ addEditStokOut(
                   onPressed: () {
                     stokOutC.brand.value = "";
                     stokOutC.lstBranch.clear();
+                    stokOutC.scanInput.clear();
+                    stokOutC.tempScanData.clear();
                     // stokOutC.toBranch.value = "";
                     // penerima = "";
                     Get.back();
+                    stokOutC.detailStokOut.clear();
+                    stokOutC.generateNumbId();
                     // stokOutC.getCatAssets({
                     //   "type": "",
                     // });

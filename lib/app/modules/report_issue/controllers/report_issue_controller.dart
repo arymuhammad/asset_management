@@ -41,6 +41,7 @@ class ReportIssueController extends GetxController {
   var reportTitle = TextEditingController();
   var keterangan = TextEditingController();
   var issue = TextEditingController();
+  final searchController = TextEditingController();
   File? file;
   Uint8List? webImage;
   String? ext;
@@ -287,7 +288,7 @@ class ReportIssueController extends GetxController {
     header.add(
       pw.Row(
         children: [
-          pw.SizedBox(width: 90, child: pw.Text('created by')),
+          pw.SizedBox(width: 90, child: pw.Text('Created By')),
           pw.Text(': ${detailDataReport[0].createdBy!}'),
         ],
       ),
@@ -295,7 +296,7 @@ class ReportIssueController extends GetxController {
     header.add(
       pw.Row(
         children: [
-          pw.SizedBox(width: 90, child: pw.Text('created at')),
+          pw.SizedBox(width: 90, child: pw.Text('Created At')),
           pw.Text(
             ': ${FormatWaktu.formatTglBlnThn(tanggal: DateTime.parse(detailDataReport[0].date!))} ${detailDataReport[0].createdAt!}',
           ),

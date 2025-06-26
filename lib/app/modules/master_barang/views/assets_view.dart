@@ -35,7 +35,10 @@ class AssetsView extends GetView {
               future: assetC.getAssets(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  assetC.dataSource = AssetData(dataAsset: assetC.dataAssetsFiltered, screenWidth:isWideScreen);
+                  assetC.dataSource = AssetData(
+                    dataAsset: assetC.dataAssetsFiltered,
+                    screenWidth: isWideScreen,
+                  );
                   return PaginatedDataTable2(
                     // controller: ,
                     minWidth: 1300,
@@ -57,6 +60,10 @@ class AssetsView extends GetView {
                     renderEmptyRowsInTheEnd: false,
                     showFirstLastButtons: true,
                     empty: const Text('Belum ada data'),
+                    headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => Colors.grey[400],
+                    ),
+                    headingRowHeight: 40,
                     actions: [
                       SizedBox(
                         width: 150,
@@ -77,7 +84,17 @@ class AssetsView extends GetView {
                         // fontSize: 16,
                         onPressed: () {
                           // assetC.getAssets();
-                          addEditAssets(context, '', '', '', '', '', '');
+                          addEditAssets(
+                            context,
+                            '',
+                            '',
+                            '',
+                            '',
+                            '',
+                            '',
+                            '',
+                            '',
+                          );
                           // assetC.isLoading.value = false;
                         },
                         splashRadius: 25,
@@ -188,8 +205,8 @@ class AssetData extends DataTableSource {
             ],
           ),
         ),
-        DataCell(Text(item.category!)),
-        DataCell(Text(CurrencyFormat.convertToIdr(item.price!,0))),
+        DataCell(Text(item.categoryName!)),
+        DataCell(Text(CurrencyFormat.convertToIdr(int.parse(item.price!), 0))),
         DataCell(Text(item.satuan!)),
         DataCell(
           Row(
@@ -201,10 +218,12 @@ class AssetData extends DataTableSource {
                     Get.context!,
                     item.id,
                     item.assetName,
-                    item.category,
+                    item.categoryId,
+                    item.categoryName,
                     item.price,
                     item.kelompok,
                     item.image!,
+                    item.satuan,
                   );
                 },
                 icon: const Icon(Icons.edit, size: 20, color: Colors.green),
@@ -228,7 +247,8 @@ class AssetData extends DataTableSource {
                     Get.context!,
                     'HAPUS',
                     'Anda yakin ingin menghapus data ini?',
-                    () => assetC.deleteAsset(item.id!, item.image!), isWideScreen
+                    () => assetC.deleteAsset(item.id!, item.image!),
+                    isWideScreen,
                   );
                 },
                 icon: const Icon(Icons.delete, size: 20, color: Colors.red),

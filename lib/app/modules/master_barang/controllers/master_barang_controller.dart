@@ -192,7 +192,7 @@ class MasterBarangController extends GetxController {
           'INV/URB/${assetsSelected.value.contains('Brand') ? 'BR' : assetsSelected.value}/${generateBarcode.toString()}',
       "category": catSelected.value,
       "purchase_date": "",
-      "price": price.text,
+      "price": price.text.replaceAll(RegExp(r'[^0-9]'), ''),
       "unit": unitSelected.value,
       // "image": files!,
       // .isNotEmpty
@@ -319,7 +319,7 @@ class MasterBarangController extends GetxController {
                     e.assetsCode.toString().toLowerCase().contains(
                       val.toLowerCase(),
                     ) ||
-                    e.category.toString().toLowerCase().contains(
+                    e.categoryName.toString().toLowerCase().contains(
                       val.toLowerCase(),
                     ),
               )
