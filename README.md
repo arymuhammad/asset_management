@@ -1,6 +1,6 @@
 # assets_management
 
-A new Flutter project.
+Asset Management adalah web app untuk me manage setiap asset perusahaan baik yang di HeadOffice dan juga di seluruh store URBAN&CO. meliputi menu Dashboard, Master Kategori, Master Asset, Stok, Barang Masuk, Barang Keluar, Report Maintenance, Request Form.
 
 ## Getting Started
 

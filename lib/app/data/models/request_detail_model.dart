@@ -10,6 +10,7 @@ class RequestDetailModel {
   late String? unit;
   late String? price;
   late String? date;
+  late String? sts;
   late String? createdBy;
 
   RequestDetailModel({
@@ -24,6 +25,7 @@ class RequestDetailModel {
     this.unit,
     this.price,
     this.date,
+    this.sts,
     this.createdBy,
   });
   RequestDetailModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class RequestDetailModel {
     unit = json['unit'] ?? '';
     price = json['price'] ?? '';
     date = json['date'] ?? '';
+    sts = json['status'] ?? '';
     createdBy = json['created_by'] ?? '';
   }
 }

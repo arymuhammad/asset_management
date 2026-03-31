@@ -28,8 +28,9 @@ class BarangMasukController extends GetxController {
   var finalTempScanData = [].obs;
   var idTrx = "";
   var fromBranch = "";
-  var author = "";
-  late TextEditingController scanInput, desc, searchController;
+  var userName = "";
+  var levelUser = "";
+  late TextEditingController asset, desc, searchController;
   late StokInData dataSource;
 
   @override
@@ -38,19 +39,22 @@ class BarangMasukController extends GetxController {
     SharedPreferences pref = await SharedPreferences.getInstance();
     var dataUser = Data.fromJson(jsonDecode(pref.getString('userDataLogin')!));
     fromBranch = dataUser.kodeCabang!;
-    author = dataUser.nama!;
+    userName = dataUser.nama!;
+    // print(userName);
+    levelUser = dataUser.levelUser!;
     // getStokInData(dataUser.kodeCabang!);
     dataStokInFiltered.value = dataStokIn;
     // dataSource = StokInData(dataStokIn: dataStokInFiltered);
-    scanInput = TextEditingController();
+    asset = TextEditingController();
     getBrand();
+    // getAssetByDiv();
     desc = TextEditingController();
     searchController = TextEditingController();
   }
 
   @override
   void onClose() {
-    // scanInput.dispose();
+    // asset.dispose();
     super.dispose();
   }
 
@@ -67,12 +71,33 @@ class BarangMasukController extends GetxController {
     return lstBranch;
   }
 
-  getStokInData(String kodeCabang) async {
-    var data = {'type': '', 'to': kodeCabang};
+  getStokInData(String kodeCabang, String level) async {
+    var data = {'type': '', 'to': kodeCabang, 'level_user': level};
+    // print(data);
     final response = await ServiceApi().stokIn(data);
+
     dataStokIn.value = response;
     isLoading.value = false;
     return dataStokIn;
+  }
+
+  bool get canSubmit {
+    final hasAnyTemp = tempScanData.isNotEmpty;
+    final hasAnyDetail = detailStokIn.isNotEmpty;
+
+    final hasPositiveQtyInTemp = tempScanData.any(
+      (e) =>
+          int.tryParse(e.qtyIn.toString()) != null &&
+          int.parse(e.qtyIn.toString()) > 0,
+    );
+    final hasPositiveQtyInDetail = detailStokIn.any(
+      (e) =>
+          int.tryParse(e.qtyIn.toString()) != null &&
+          int.parse(e.qtyIn.toString()) > 0,
+    );
+
+    return (hasAnyTemp || hasAnyDetail) &&
+        (hasPositiveQtyInTemp || hasPositiveQtyInDetail);
   }
 
   filterDataStokIn(String val) {
@@ -100,12 +125,19 @@ class BarangMasukController extends GetxController {
     dataStokInFiltered.value = result;
   }
 
-  Future fetchAsset(String? barcode) async {
-    // isLoading.value = true;
-    var data = {"type": "", "asset_code": barcode};
+  // Future fetchAsset(String? barcode) async {
+  //   // isLoading.value = true;
+  //   var data = {"type": "", "asset_code": barcode};
+  //   final response = await ServiceApi().getAsset(data);
+  //   // isLoading.value = false;
+  //   return tempAssetData.value = response;
+  // }
+
+  Future<List<DetailBarangMasukKeluar>> getAssetByDiv() async {
+    var data = {"type": "", "group": levelUser.split(' ')[0]};
     final response = await ServiceApi().getAsset(data);
-    // isLoading.value = false;
-    return tempAssetData.value = response;
+    // print(data);
+    return tempAssetData.value = response!.detailBarangMasukKeluar;
   }
 
   generateNumbId() {
@@ -119,17 +151,14 @@ class BarangMasukController extends GetxController {
     String? kodePenerima,
     String? kodePengirim,
   ) async {
-    Get.back();
-    loadingDialog("Mengirim data", "");
-
     var amount =
         detailStokIn.isNotEmpty
             ? detailStokIn
                 .map((e) => e.qtyIn)
-                .fold(0, (prev, qty) => prev + int.parse(qty!))
+                .fold(0, (prev, qty) => prev + int.parse(qty.value))
             : tempScanData
                 .map((e) => e.qtyIn)
-                .fold(0, (prev, qty) => prev + int.parse(qty!));
+                .fold(0, (prev, qty) => prev + int.parse(qty.value));
     // print(amount);
     var data = {
       "type": type,
@@ -139,7 +168,7 @@ class BarangMasukController extends GetxController {
       "desc": desc.text,
       "qty_amount": amount.toString(),
       "status": "OPEN",
-      "created_by": author,
+      "created_by": userName,
     };
 
     // print(data);
@@ -154,15 +183,19 @@ class BarangMasukController extends GetxController {
         "asset_code": lstData.assetCode,
         "asset_name": lstData.assetName,
         "group": lstData.group,
-        "qty_in": lstData.qtyIn,
-        "qty_good": lstData.good,
-        "qty_bad": lstData.bad,
+        "qty_in": lstData.qtyIn.value,
+        "qty_new": lstData.neww.value,
+        "qty_sec": lstData.sec.value,
+        "qty_bad": lstData.bad.value,
         "status": "OPEN",
+        "created_by": userName,
       };
       // print(detailData);
       await ServiceApi().stokIn(detailData);
     }
-    scanInput.clear();
+    await getStokInData(fromBranch, levelUser.split(' ')[0]);
+    generateNumbId();
+    asset.clear();
     tempScanData.clear();
     detailStokIn.clear();
 
@@ -176,18 +209,16 @@ class BarangMasukController extends GetxController {
     String? kodePenerima,
     String? kodePengirim,
     String? description,
+    String? auth,
   ) async {
-    Get.back();
-    loadingDialog("Mengirim data", "");
-
     var amount =
         detailStokIn.isNotEmpty
             ? detailStokIn
                 .map((e) => e.qtyIn)
-                .fold(0, (prev, qty) => prev + int.parse(qty!))
+                .fold(0, (prev, qty) => prev + int.parse(qty.value))
             : tempScanData
                 .map((e) => e.qtyIn)
-                .fold(0, (prev, qty) => prev + int.parse(qty!));
+                .fold(0, (prev, qty) => prev + int.parse(qty.value));
 
     var data = {
       "type": type,
@@ -197,11 +228,11 @@ class BarangMasukController extends GetxController {
       "desc": desc.text != "" ? desc.text : description!,
       "qty_amount": amount.toString(),
       "status": "CLOSED",
-      "created_by": author,
+      "created_by": (auth == null || auth.trim().isEmpty) ? userName : auth,
+      "updated_by": userName,
     };
     // print(data);
     await ServiceApi().stokIn(data);
-    // await ServiceApi().stokOut(data);
 
     for (var lstData in detailStokIn.isNotEmpty ? detailStokIn : tempScanData) {
       var detailData = {
@@ -212,17 +243,22 @@ class BarangMasukController extends GetxController {
         "asset_code": lstData.assetCode,
         "asset_name": lstData.assetName,
         "group": lstData.group,
-        "qty_in": lstData.qtyIn,
-        "qty_good": lstData.good,
-        "qty_bad": lstData.bad,
+        "qty_in": lstData.qtyIn.value,
+        "qty_new": lstData.neww.value,
+        "qty_sec": lstData.sec.value,
+        "qty_bad": lstData.bad.value,
         "status": "CLOSED",
+        "created_by": (auth == null || auth.trim().isEmpty) ? userName : auth,
+        "updated_by": userName,
       };
       // print(detailData);
       await ServiceApi().stokIn(detailData);
     }
     // var getStock = {"type": "", "cabang": fromBranch};
     // await ServiceApi().stokCRUD(getStock);
-    scanInput.clear();
+    await getStokInData(fromBranch, levelUser.split(' ')[0]);
+    generateNumbId();
+    asset.clear();
     tempScanData.clear();
     detailStokIn.clear();
     Get.back();
@@ -230,11 +266,9 @@ class BarangMasukController extends GetxController {
   }
 
   rejectDataIn(String id) async {
-    Get.back();
-    loadingDialog('Memproses data...', "");
     var data = {"type": "reject_data", "id": id};
     await ServiceApi().stokIn(data);
-    await getStokInData(fromBranch);
+    await getStokInData(fromBranch, levelUser.split(' ')[0]);
     filterDataStokIn("");
     // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
     dataSource.notifyListeners();
@@ -250,5 +284,9 @@ class BarangMasukController extends GetxController {
   deleteStokIn(String id) async {
     var data = {"type": "delete_stokIn", "id": id};
     await ServiceApi().stokIn(data);
+    await getStokInData(fromBranch, levelUser.split(' ')[0]);
+    filterDataStokIn("");
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    dataSource.notifyListeners();
   }
 }

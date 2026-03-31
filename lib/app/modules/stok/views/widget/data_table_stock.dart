@@ -1,4 +1,5 @@
 import 'package:assets_management/app/data/helper/const.dart';
+import 'package:assets_management/app/data/helper/custom_dialog.dart';
 import 'package:assets_management/app/data/helper/format_waktu.dart';
 import 'package:assets_management/app/data/models/stock_detail_model.dart';
 import 'package:assets_management/app/data/shared/text_field.dart';
@@ -68,7 +69,21 @@ class DataTabelStock extends StatelessWidget {
                 ),
               ],
               columns: [
-                const DataColumn2(label: Text('ID'), fixedWidth: 186),
+                DataColumn2(
+                  label: Text(
+                    status == 'IN'
+                        ? 'ID IN'
+                        : status == 'SUMMARY'
+                        ? 'ID IN/OUT'
+                        : status == 'ADJ IN'
+                        ? 'ID ADJ IN'
+                        : status == 'ADJ OUT'
+                        ? 'ID ADJ OUT'
+                        : 'ID OUT',
+                  ),
+                  fixedWidth: 195,
+                ),
+                // if (!['ADJ IN', 'ADJ OUT'].contains(status))
                 DataColumn2(
                   label: Text(
                     status == 'IN'
@@ -77,12 +92,13 @@ class DataTabelStock extends StatelessWidget {
                         ? 'Cabang'
                         : 'Penerima',
                   ),
-                  fixedWidth: 150,
+                  fixedWidth: 160,
                 ),
                 const DataColumn2(label: Text('Nama Asset'), fixedWidth: 200),
-                const DataColumn2(label: Text('Quantity'), fixedWidth: 100),
-                const DataColumn2(label: Text('Tanggal'), fixedWidth: 100),
+                const DataColumn2(label: Text('Jumlah'), fixedWidth: 100),
+                const DataColumn2(label: Text('Tanggal'), fixedWidth: 110),
                 const DataColumn2(label: Text('Waktu'), fixedWidth: 100),
+                const DataColumn2(label: Text('Dibuat Oleh'), fixedWidth: 100),
               ],
               source: dataDetail,
             ),
@@ -162,9 +178,9 @@ class DetailStokData extends DataTableSource {
     // Tentukan warna baris berdasarkan status dan tipe stock
     Color? rowColor;
     if (status == 'SUMMARY') {
-      if (item.type == 'stock_in') {
+      if (item.type == 'stock_in' || item.type == 'adj_in') {
         rowColor = Colors.green[100];
-      } else if (item.type == 'stock_out') {
+      } else {
         rowColor = Colors.red[100];
       }
     }
@@ -175,49 +191,15 @@ class DetailStokData extends DataTableSource {
         DataCell(
           Row(
             children: [
-              Text(item.id!),
-              IconButton(
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: item.id!));
-                  Get.snackbar(
-                    'Copied',
-                    'Barcode ${item.id!} berhasil disalin ke clipboard!',
-                    snackPosition: SnackPosition.BOTTOM,
-                    maxWidth: 400, // Batasi lebar maksimal snackbar
-                    margin: const EdgeInsets.only(
-                      right: 20,
-                      bottom: 20,
-                    ), // Margin kanan dan bawah
-                    borderRadius: 8,
-                    backgroundColor: Colors.black87,
-                    colorText: Colors.white,
-                    snackStyle:
-                        SnackStyle
-                            .FLOATING, // Floating agar tidak melebar penuh
-                    animationDuration: const Duration(milliseconds: 300),
-                    duration: const Duration(seconds: 2),
-                  );
-                  ScaffoldMessenger.of(Get.context!).showSnackBar(
-                    SnackBar(
-                      elevation: 20,
-                      content: Text(
-                        'Barcode ${item.id!} berhasil disalin ke clipboard!',
-                      ),
-                    ),
-                  );
-                },
-                icon: Icon(
-                  HugeIcons.strokeRoundedCopy01,
-                  color: Colors.blue[400],
-                ),
-                splashRadius: 30,
-                tooltip: 'copy to clipboard',
+              InkWell(
+                onTap: () => snackbarCopy(item: item.id!),
+                child: Text(item.id!, style: const TextStyle(color: Colors.blue),),
               ),
             ],
           ),
         ),
-        DataCell(Text(item.cabang!)),
-        DataCell(Text(item.assetName!)),
+        DataCell(Text(item.cabang!.capitalize!)),
+        DataCell(Text(item.assetName!.capitalize!)),
         DataCell(Text(item.qty!)),
         DataCell(
           Text(
@@ -227,6 +209,7 @@ class DetailStokData extends DataTableSource {
         DataCell(
           Text(DateFormat('HH:mm:ss').format(DateTime.parse(item.createdAt!))),
         ),
+        DataCell(Text(item.createdBy!.capitalize!)),
       ],
     );
   }

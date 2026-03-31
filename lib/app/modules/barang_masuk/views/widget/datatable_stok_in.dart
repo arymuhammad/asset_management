@@ -27,16 +27,17 @@ class DatatableStokIn extends StatelessWidget {
       () => DataTable2(
         empty: const Center(child: Text('Belum ada data')),
         lmRatio: 1,
-        minWidth: 1000,
+        minWidth: 1100,
         isHorizontalScrollBarVisible: true,
         isVerticalScrollBarVisible: true,
         fixedLeftColumns: 1,
         columns: [
           const DataColumn2(label: Text('Asset Name'), fixedWidth: 190),
-          const DataColumn2(label: Text('Asset Code'), fixedWidth: 200),
+          const DataColumn2(label: Text('Asset Code'), fixedWidth: 210),
+          const DataColumn2(label: Text('Qty New'), fixedWidth: 115),
+          const DataColumn2(label: Text('Qty Sec'), fixedWidth: 110),
+          const DataColumn2(label: Text('Qty Bad'), fixedWidth: 110),
           const DataColumn2(label: Text('Qty Total'), fixedWidth: 120),
-          const DataColumn2(label: Text('Qty Good'), fixedWidth: 120),
-          const DataColumn2(label: Text('Qty Bad'), fixedWidth: 120),
           DataColumn2(
             label:
                 statusData == "OPEN" && pengirim == penerima || statusData == ""
@@ -75,21 +76,28 @@ class DatatableStokIn extends StatelessWidget {
                                     statusData == ""
                                 ? true
                                 : false,
-                        initialValue: stokInData.isNotEmpty ? e.qtyIn : "",
+                        label: 'New',
+                        initialValue: stokInData.isNotEmpty ? e.neww.value : "",
                         onChanged: (val) {
                           // int index = stokInC.detailStokIn.indexWhere(
                           //   (data) => data.assetCode == e.assetCode,
                           // );
                           if (index != -1) {
-                            if (val.isEmpty) {
-                             tempData[index].qtyIn = '0';
-                            } else {
-                             tempData[index].qtyIn = val;
-                            }
-                            // print(index);
+                            tempData[index].neww.value =
+                                val.isEmpty ? '0' : val;
+                            // Update qtyIn langsung pada baris ini
+                            num newwNum =
+                                num.tryParse(tempData[index].neww.value) ?? 0;
+                            num secNum =
+                                num.tryParse(tempData[index].sec.value) ?? 0;
+                            num badNum =
+                                num.tryParse(tempData[index].bad.value) ?? 0;
+                            tempData[index].qtyIn.value =
+                                (newwNum + secNum + badNum).toString();
+                            stokInC.update();
+                            // Update UI sesuai kebutuhan, misal dengan setState atau GetX update
                           }
                         },
-                        label: 'Total',
                       ),
                     ),
                   ),
@@ -106,18 +114,25 @@ class DatatableStokIn extends StatelessWidget {
                                     statusData == ""
                                 ? true
                                 : false,
-                        label: 'Good',
-                        initialValue: stokInData.isNotEmpty ? e.good : "",
+                        label: 'Second',
+                        initialValue: stokInData.isNotEmpty ? e.sec.value : "",
                         onChanged: (val) {
                           // int index = stokInC.detailStokIn.indexWhere(
                           //   (data) => data.assetCode == e.assetCode,
                           // );
                           if (index != -1) {
-                            if (val.isEmpty) {
-                             tempData[index].good = '0';
-                            } else {
-                             tempData[index].good = val;
-                            }
+                            tempData[index].sec.value = val.isEmpty ? '0' : val;
+                            // Update qtyIn langsung pada baris ini
+                            num newwNum =
+                                num.tryParse(tempData[index].neww.value) ?? 0;
+                            num secNum =
+                                num.tryParse(tempData[index].sec.value) ?? 0;
+                            num badNum =
+                                num.tryParse(tempData[index].bad.value) ?? 0;
+                            tempData[index].qtyIn.value =
+                                (newwNum + secNum + badNum).toString();
+                            stokInC.update();
+                            // Update UI sesuai kebutuhan, misal dengan setState atau GetX update
                           }
                         },
                       ),
@@ -137,20 +152,33 @@ class DatatableStokIn extends StatelessWidget {
                                 ? true
                                 : false,
                         label: 'Bad',
-                        initialValue: stokInData.isNotEmpty ? e.bad : "",
+                        initialValue: stokInData.isNotEmpty ? e.bad.value : "",
                         onChanged: (val) {
                           // int index = stokInC.detailStokIn.indexWhere(
                           //   (data) => data.assetCode == e.assetCode,
                           // );
                           if (index != -1) {
-                            if (val.isEmpty) {
-                             tempData[index].bad = '0';
-                            } else {
-                             tempData[index].bad = val;
-                            }
+                            tempData[index].bad.value = val.isEmpty ? '0' : val;
+                            // Update qtyIn langsung pada baris ini
+                            num newwNum =
+                                num.tryParse(tempData[index].neww.value) ?? 0;
+                            num secNum =
+                                num.tryParse(tempData[index].sec.value) ?? 0;
+                            num badNum =
+                                num.tryParse(tempData[index].bad.value) ?? 0;
+                            tempData[index].qtyIn.value =
+                                (newwNum + secNum + badNum).toString();
+                            stokInC.update();
+                            // Update UI sesuai kebutuhan, misal dengan setState atau GetX update
                           }
                         },
                       ),
+                    ),
+                  ),
+                  DataCell(
+                    SizedBox(
+                      height: 37,
+                      child: Center(child: Text(tempData[index].qtyIn.value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),)),
                     ),
                   ),
                   DataCell(

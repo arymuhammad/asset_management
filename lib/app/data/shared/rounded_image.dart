@@ -30,15 +30,15 @@ class RoundedImage extends StatelessWidget {
         child: headerProfile
             ? foto != ""
                 ? CachedNetworkImage(
-                    imageUrl: "${ServiceApi().baseUrl}$foto",
-                    fit: BoxFit.fill,
+                    imageUrl: "http://103.156.15.61/api-absensi/$foto",
+                    fit: BoxFit.cover,
                     progressIndicatorBuilder: (context, url, progress) =>
                         CircularProgressIndicator(
                       value: progress.progress,
                       strokeWidth: 15,
                     ),
                     cacheKey:
-                        "${ServiceApi().baseUrl}$foto + ${DateTime.now().day.toString()}",
+                        "${'http://103.156.15.61/api-absensi/'}$foto + ${DateTime.now().day.toString()}",
                   )
                 : Image.network(
                     "https://ui-avatars.com/api/?name=$name",
@@ -46,7 +46,7 @@ class RoundedImage extends StatelessWidget {
                   )
             : foto != "" && foto.contains('absensi/')
                 ? CachedNetworkImage(
-                    imageUrl: "${ServiceApi().baseUrl}$foto",
+                    imageUrl: "${'http://103.156.15.61/api-absensi/'}$foto",
                     fit: BoxFit.cover,
                     progressIndicatorBuilder: (context, url, progress) =>
                         CircularProgressIndicator(
@@ -54,7 +54,7 @@ class RoundedImage extends StatelessWidget {
                       strokeWidth: 15,
                     ),
                     cacheKey:
-                        "${ServiceApi().baseUrl}$foto + ${DateTime.now().day.toString()}",
+                        "${'http://103.156.15.61/api-absensi/'}$foto + ${DateTime.now().day.toString()}",
                   )
                 : foto != "" && foto.contains('/data')
                     ? Image.file(File(foto),

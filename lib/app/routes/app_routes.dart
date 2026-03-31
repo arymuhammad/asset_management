@@ -12,6 +12,8 @@ abstract class Routes {
   static const ASSET = _Paths.ASSET;
   static const REPORT_ISSUE = _Paths.REPORT_ISSUE;
   static const REQUEST_FORM = _Paths.REQUEST_FORM;
+  static const STOK_OPNAME = _Paths.STOK_OPNAME;
+  static const ADJUSMENT = _Paths.ADJUSMENT;
 }
 
 abstract class _Paths {
@@ -25,4 +27,6 @@ abstract class _Paths {
   static const ASSET = '/asset';
   static const REPORT_ISSUE = '/report-issue';
   static const REQUEST_FORM = '/request-form';
+  static const STOK_OPNAME = '/stok-opname';
+  static const ADJUSMENT = '/adjusment';
 }

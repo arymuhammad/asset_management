@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-
 import 'package:assets_management/app/data/Repo/service_api.dart';
 import 'package:assets_management/app/data/helper/currency_format.dart';
 import 'package:assets_management/app/data/models/category_assets_model.dart';
@@ -17,13 +16,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/helper/custom_dialog.dart';
 import '../../../data/helper/format_waktu.dart';
-import '../../../data/models/detail_barang_masuk_keluar_model.dart';
 import '../../../data/models/login_model.dart';
 
 class RequestFormController extends GetxController {
   var isLoading = true.obs;
   var rowsPerPage = 10;
   var catAsset = <CategoryAssets>[].obs;
+  Rx<CategoryAssets?> catSelectedObj = Rx<CategoryAssets?>(null);
   var lstRequest = <RequestModel>[].obs;
   var dataRequestFiltered = RxList<RequestModel>([]);
   final searchController = TextEditingController();
@@ -50,6 +49,7 @@ class RequestFormController extends GetxController {
     author = dataUser.nama!;
     requestData = RequestData(dataRequest: dataRequestFiltered);
     dataRequestFiltered.value = lstRequest;
+    // fetchCatAsset();
   }
 
   // @override
@@ -61,6 +61,7 @@ class RequestFormController extends GetxController {
     // Simulate a network request
     // await Future.delayed(Duration(seconds: 2));
     var data = {"type": "", "branch": branchCode};
+    // print(data);
     final response = await ServiceApi().request(data);
     lstRequest.value = response;
     isLoading.value = false;
@@ -74,9 +75,10 @@ class RequestFormController extends GetxController {
     return detailRequest;
   }
 
-  Future fetchCatAsset() async {
-    var data = {"type": "get_cat_asset"};
+  Future fetchCatAsset(String branch) async {
+    var data = {"type": "get_cat_asset", "branch": branch};
     final response = await ServiceApi().getCatAsset(data);
+    // print(data);
     // isLoading.value = false;
     return catAsset.value = response;
   }
@@ -156,10 +158,16 @@ class RequestFormController extends GetxController {
     // Get.back();
   }
 
-  getReqItem(String val) async {
+  getReqItem(String cat, String group, String cbg) async {
     tempData.clear();
-    var data = {"type": "get_item_request", "branch": branchCode, "cat": val};
+    var data = {
+      "type": "get_item_request",
+      "cat": cat,
+      "group": group,
+      "branch": cbg,
+    };
     final response = await ServiceApi().request(data);
+    // print(data);
     tempAssetData.value = response;
     isLoading.value = false;
     return tempAssetData;
@@ -170,6 +178,7 @@ class RequestFormController extends GetxController {
     final List<pw.TableRow> rows = await _loadData();
     final List<pw.Row> header = await _loadHeader();
     final List<pw.Container> footer = await _loadFooter();
+    final List<pw.Column> signature = await _loadSignature();
 
     doc.addPage(
       pw.MultiPage(
@@ -195,6 +204,11 @@ class RequestFormController extends GetxController {
                 child: pw.Table(border: pw.TableBorder.all(), children: rows),
               ),
               pw.Column(children: footer),
+              pw.SizedBox(height: 120),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: signature,
+              ),
             ],
       ),
     );
@@ -399,5 +413,74 @@ class RequestFormController extends GetxController {
       ),
     );
     return footer;
+  }
+
+  _loadSignature() {
+    List<pw.Column> signature = [];
+    signature.add(
+      pw.Column(
+        children: [
+          pw.Text('Diajukan oleh'),
+          pw.SizedBox(height: 60),
+          pw.Text('(...............................)'),
+        ],
+      ),
+    );
+    signature.add(
+      pw.Column(
+        children: [
+          pw.Text('Mengetahui'),
+          pw.SizedBox(height: 60),
+          pw.Text('(...............................)'),
+        ],
+      ),
+    );
+    signature.add(
+      pw.Column(
+        children: [
+          pw.Text('Mengetahui'),
+          pw.SizedBox(height: 60),
+          pw.Text('(...............................)'),
+        ],
+      ),
+    );
+    signature.add(
+      pw.Column(
+        children: [
+          pw.Text('Menyetujui'),
+          pw.SizedBox(height: 60),
+          pw.Text('(...............................)'),
+        ],
+      ),
+    );
+    return signature;
+  }
+
+  void recalcTotal() {
+    grandTotal.value = tempData.fold(
+      0,
+      (p, e) =>
+          (int.tryParse(e.price ?? '0') ?? 0) *
+              (int.tryParse(e.qtyReq ?? '0') ?? 0) +
+          p,
+    );
+  }
+
+  accReqItem(String reqId, String barCode) async {
+    var data = {
+      "type": "accept_item_req",
+      "req_id": reqId,
+      "asset_code": barCode,
+    };
+    await ServiceApi().request(data);
+  }
+
+  cnlReqItem(String reqId, String barCode) async {
+    var data = {
+      "type": "cancel_item_req",
+      "req_id": reqId,
+      "asset_code": barCode,
+    };
+    await ServiceApi().request(data);
   }
 }

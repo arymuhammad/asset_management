@@ -30,17 +30,48 @@ class MasterBarangController extends GetxController {
   var catName = TextEditingController();
   var deskripsi = TextEditingController();
   var asset = TextEditingController();
+  var sn = TextEditingController();
   var price = TextEditingController();
+  var purchaseDate = TextEditingController();
+  var presentPrice = "".obs;
+  var searchAssetController = TextEditingController();
+  var searchKategoriController = TextEditingController();
   var dateTimeNow = "";
   var branchCode = "";
   var dataCatAssets = <CategoryAssets>[].obs;
   var checkCatAssets = CategoryAssets().obs;
+  var checkAssets = AssetsModel().obs;
   var dataCatAssetsFiltered = RxList<CategoryAssets>([]);
   var dataAssets = <AssetsModel>[].obs;
   var dataAssetsFiltered = RxList<AssetsModel>([]);
   var isLoading = true.obs;
   var catSelected = "".obs;
-  var assetsGroup = ["", "IT", "Brand", "Merchandise"];
+  var assetsGroup = [
+    "",
+    "Brand",
+    "Editorial",
+    "General Affair",
+    "Gudang MD",
+    "Information Technology",
+    "Online (Another)",
+    "Online (Urban)",
+    "Project",
+    "Ruang Busdev",
+    "Ruang Direktur",
+    "Ruang GM",
+    "Ruang Kerja Another",
+    "Ruang Kerja Audit",
+    "Ruang Kerja Brand",
+    "Ruang Kerja HRD",
+    "Ruang Kerja IT",
+    "Ruang Kerja Ops",
+    "Ruang Kerja Project",
+    "Ruang Kerja Purchasing",
+    "Ruang Meeting",
+    "Visual Merchandise",
+    "Visual Merchandise Fashion",
+    "Visual Merchandise Footwear",
+  ];
   var assetsUnit = ["", "PCS", "UNIT", "SET"];
   var assetsSelected = "".obs;
   Rx<CategoryAssets?> catSelectedObj = Rx<CategoryAssets?>(null);
@@ -56,9 +87,11 @@ class MasterBarangController extends GetxController {
 
   RxString imagePath = ''.obs;
   RxBool isUploading = false.obs;
+  RxBool isChangingRowPerPage = false.obs;
+
   var rowsPerPage = 10;
   late AssetData dataSource;
-  late Mydata dataSourceMydata;
+  late Mydata category;
 
   @override
   void onInit() async {
@@ -78,15 +111,6 @@ class MasterBarangController extends GetxController {
     // dataSource = AssetData(dataAsset: dataAssetsFiltered);
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-    // catName.dispose();
-    // deskripsi.dispose();
-    // asset.dispose();
-    // price.dispose();
-  }
-
   void updateDateTime() {
     final now = DateTime.now();
 
@@ -101,15 +125,6 @@ class MasterBarangController extends GetxController {
     return dataCatAssets;
   }
 
-  // FutureOr<List<String>?> getSuggestions(String query) {
-  //   return dataCatAssets
-  //       .where(
-  //         (asset) => asset.catName!.toUpperCase().contains(query.toUpperCase()),
-  //       )
-  //       .map((asset) => asset.catName!) // Konversi ke String
-  //       .toList(); // Konversi Iterable ke List
-  // }
-
   getAssets() async {
     var data = {"type": ""};
     final response = await ServiceApi().assetsCRUD(data);
@@ -118,9 +133,32 @@ class MasterBarangController extends GetxController {
     return dataAssets;
   }
 
-  verifiedAssetCat(String category) async {
-    var data = {"type": "get_kategori", "cat_name": category};
+  Future<void> changeRowsPerPage(int value) async {
+    // Set flag loading dulu supaya overlay langsung muncul
+    isChangingRowPerPage.value = true;
+
+    // Set rowsPerPage dulu secara langsung
+
+    // Refresh data source atau proses lain yang diperlukan
+    Future.delayed(const Duration(seconds: 1), () {
+      // Simulasi delay pemrosesan
+      // Setelah proses selesai, set flag loading ke false
+      rowsPerPage = value;
+      isChangingRowPerPage.value = false;
+    });
+  }
+
+  verifiedAssetCat(String category, String grp) async {
+    var data = {"type": "get_kategori", "cat_name": category, "group": grp};
     return checkCatAssets.value = await ServiceApi().assetsCatCRUD(data);
+  }
+
+  countPrice(String price) {
+    int initPrice =
+        int.tryParse(
+          price.isNotEmpty ? price.replaceAll(RegExp(r'[^0-9]'), '') : '0',
+        )!;
+    return presentPrice.value = (initPrice).toString();
   }
 
   assetsCatSubmit(String? type, String? id) async {
@@ -133,19 +171,27 @@ class MasterBarangController extends GetxController {
       "created_at": dateTimeNow,
       "id": idUpdate,
     };
+
     await ServiceApi().assetsCatCRUD(data);
     isLoading.value = true;
     assetsSelected.value = "";
     catName.clear();
     deskripsi.clear();
+    filterDataCatAsset('');
     await getCatAssets({"type": "", "group": ""});
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    category.notifyListeners();
   }
 
   void deleteAssetCategories(String id) async {
     var data = {"type": "delete_kategori", "id": id};
     await ServiceApi().assetsCatCRUD(data);
     isLoading.value = true;
-    await getCatAssets({"type": "", "group": assetsSelected.value});
+    // await getCatAssets({"type": "", "group": assetsSelected.value});
+    await getCatAssets({"type": "", "group": ""});
+    filterDataCatAsset('');
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    category.notifyListeners();
   }
 
   void deleteAsset(String id, String image) async {
@@ -157,7 +203,17 @@ class MasterBarangController extends GetxController {
     dataSource.notifyListeners();
   }
 
-  assetsSubmit(String? type, String? id, String? imageOld, bool isWideScreen) async {
+  verifiedAsset(String name, String grp) async {
+    var data = {"type": "get_asset", "asset_name": name, "group": grp};
+    return checkAssets.value = await ServiceApi().assetsCRUD(data);
+  }
+
+  assetsSubmit(
+    String? type,
+    String? id,
+    String? imageOld,
+    bool isWideScreen,
+  ) async {
     Get.back();
     loadingDialog("Menyimpan data...", "");
     var idUpdate = id != "" ? id : "";
@@ -189,11 +245,31 @@ class MasterBarangController extends GetxController {
       "type": type!,
       "asset_name": asset.text,
       "asset_code":
-          'INV/URB/${assetsSelected.value.contains('Brand') ? 'BR' : assetsSelected.value}/${generateBarcode.toString()}',
+          'INV/URB/${assetsSelected.value.contains('Brand')
+              ? 'BR'
+              : assetsSelected.value.contains('Editorial')
+              ? 'ED'
+              : assetsSelected.value.contains('Information Technology')
+              ? 'IT'
+              : assetsSelected.value.contains('General Affair')
+              ? 'GA'
+              : assetsSelected.value.contains('Project')
+              ? 'PR'
+              : assetsSelected.value.contains('Visual Merchandise')
+              ? 'VM'
+              : assetsSelected.value.contains('Visual Merchandise Fashion')
+              ? 'VMF'
+              : assetsSelected.value.contains('Online (Another)')
+              ? 'AN'
+              : assetsSelected.value}/${generateBarcode.toString()}',
       "category": catSelected.value,
-      "purchase_date": "",
-      "price": price.text.replaceAll(RegExp(r'[^0-9]'), ''),
+      "purchase_date": purchaseDate.text,
+      "price":
+          price.text.isNotEmpty
+              ? price.text.replaceAll(RegExp(r'[^0-9]'), '')
+              : '0',
       "unit": unitSelected.value,
+      "sn": sn.text,
       // "image": files!,
       // .isNotEmpty
       //     ? webImage
@@ -211,7 +287,7 @@ class MasterBarangController extends GetxController {
       final response = await GetConnect()
           .post(
             // 'http://localhost/asset_management/api/asset', // Ganti sesuai endpoint CodeIgniter-mu
-            'http://103.156.15.61/asset_management/api/asset', // Ganti sesuai endpoint CodeIgniter-mu
+            '${ServiceApi().baseUrl}asset', // Ganti sesuai endpoint CodeIgniter-mu
             formData,
             headers: {'Content-Type': 'multipart/form-data'},
           )
@@ -223,24 +299,26 @@ class MasterBarangController extends GetxController {
           catSelectedObj.value = null;
           unitSelected.value = "";
           asset.clear();
+          sn.clear();
           price.clear();
+          purchaseDate.clear();
           webImage = null;
           showToast('Asset berhasil ditambahkan', 'green');
           await getAssets();
           // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
           dataSource.notifyListeners();
-          // await getCatAssets({"type": ""});
+          searchAssetController.clear();
+          filterDataAsset('');
           Get.back();
           break;
         default:
+          Get.back();
           throw Exception(response.status);
       }
     } on Exception catch (e) {
+      Get.back();
       failedDialog(Get.context!, 'ERROR', e.toString(), isWideScreen);
     }
-
-    // await ServiceApi().assetsCRUD(data);
-    // isLoading.value = true;
   }
 
   void pickAndUploadImage() async {
@@ -317,6 +395,9 @@ class MasterBarangController extends GetxController {
                       val.toLowerCase(),
                     ) ||
                     e.assetsCode.toString().toLowerCase().contains(
+                      val.toLowerCase(),
+                    ) ||
+                    e.group.toString().toLowerCase().contains(
                       val.toLowerCase(),
                     ) ||
                     e.categoryName.toString().toLowerCase().contains(

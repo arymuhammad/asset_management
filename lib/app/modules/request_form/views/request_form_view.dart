@@ -1,3 +1,4 @@
+import 'package:assets_management/app/data/helper/app_colors.dart';
 import 'package:assets_management/app/data/helper/custom_dialog.dart';
 import 'package:assets_management/app/data/models/request_model.dart';
 import 'package:data_table_2/data_table_2.dart';
@@ -43,8 +44,6 @@ class RequestFormView extends GetView<RequestFormController> {
                         wrapInCard: true,
                         columnSpacing: 20,
                         horizontalMargin: 12,
-                        // columnSpacing: 100,
-                        // horizontalMargin: 40,
                         smRatio: 0.9, // Rasio lebar kolom S terhadap M
                         lmRatio: 2.0,
                         // fixedLeftColumns: 1,
@@ -62,7 +61,7 @@ class RequestFormView extends GetView<RequestFormController> {
                           children: [Text('Belum ada data')],
                         ),
                         headingRowColor: WidgetStateProperty.resolveWith(
-                          (states) => Colors.grey[400],
+                          (states) => AppColors.itemsBackground,
                         ),
                         headingRowHeight: 40,
 
@@ -87,8 +86,20 @@ class RequestFormView extends GetView<RequestFormController> {
                           ),
                           IconButton(
                             onPressed: () async {
-                              addRequest(context, '', '', '', RxList.empty());
+                              loadingDialog("Memuat data...", "");
                               await requestC.generateId();
+                              await requestC.fetchCatAsset(requestC.branchCode);
+                              if (!context.mounted) return;
+                              Get.back();
+                              addRequest(
+                                context,
+                                '',
+                                '',
+                                requestC.branchCode,
+                                '',
+                                '',
+                                RxList.empty(),
+                              );
                               // print(requestC.idReport);
                             },
                             icon: const Icon(HugeIcons.strokeRoundedAddCircle),
@@ -97,32 +108,62 @@ class RequestFormView extends GetView<RequestFormController> {
                         ],
                         header: const Text(
                           'Requst Form',
-                          style: TextStyle(fontSize: 20),
+                          style: TextStyle(fontSize: 15),
                         ),
                         columns: const [
                           // DataColumn2(label: Text('ID'), fixedWidth: 150),
                           DataColumn2(
-                            label: Center(child: Text('STORE')),
+                            label: Center(
+                              child: Text(
+                                'STORE',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                             fixedWidth: 180,
                           ),
                           DataColumn2(
-                            label: Center(child: Text('REQUEST DESCRIPTION')),
+                            label: Center(
+                              child: Text(
+                                'REQUEST DESCRIPTION',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                             fixedWidth: 320,
                           ),
                           DataColumn2(
-                            label: Center(child: Text('CATEGORY')),
+                            label: Center(
+                              child: Text(
+                                'CATEGORY',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                             fixedWidth: 200,
                           ),
                           DataColumn2(
-                            label: Center(child: Text('CREATED BY')),
+                            label: Center(
+                              child: Text(
+                                'CREATED BY',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                             fixedWidth: 170,
                           ),
                           DataColumn2(
-                            label: Center(child: Text('DATE')),
+                            label: Center(
+                              child: Text(
+                                'DATE',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                             fixedWidth: 120,
                           ),
                           DataColumn2(
-                            label: Center(child: Text('ACTION')),
+                            label: Center(
+                              child: Text(
+                                'ACTION',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                             fixedWidth: 120,
                           ),
                         ],
@@ -133,6 +174,7 @@ class RequestFormView extends GetView<RequestFormController> {
           floatingActionButton:
               !isWideScreen
                   ? FloatingActionButton(
+                    backgroundColor: AppColors.itemsBackground,
                     onPressed: () {
                       seachForm(context);
                     },
@@ -205,6 +247,8 @@ class RequestData extends DataTableSource {
                   addRequest(
                     Get.context!,
                     item.id!,
+                    item.group!,
+                    item.branchCode!,
                     item.desc!,
                     item.category!,
                     requestC.detailRequest,
@@ -221,8 +265,8 @@ class RequestData extends DataTableSource {
             ),
           ),
         ),
-        DataCell(Center(child: Text(item.desc!))),
-        DataCell(Center(child: Text(item.categoryName!))),
+        DataCell(Center(child: Text(item.desc!.capitalize!))),
+        DataCell(Center(child: Text(item.categoryName!.capitalize!))),
         DataCell(Center(child: Text(item.createdBy!))),
         DataCell(
           Center(
@@ -263,6 +307,8 @@ class RequestData extends DataTableSource {
                       addRequest(
                         Get.context!,
                         item.id!,
+                        item.group!,
+                        item.branchCode!,
                         item.desc!,
                         item.category!,
                         requestC.detailRequest,

@@ -1,17 +1,19 @@
 class Login {
-  bool? success;
+  // bool? success;
+  bool? status;
   Data? data;
 
-  Login({this.success, this.data});
+  Login({this.status, this.data});
 
   Login.fromJson(Map<String, dynamic> json) {
-    success = json['success'];
+    // success = json['success'];
+    status = json['status'];
     data = json['data'] != null ? Data.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['success'] = success;
+    data['status'] = status;
     if (this.data != null) {
       data['data'] = this.data!.toJson();
     }

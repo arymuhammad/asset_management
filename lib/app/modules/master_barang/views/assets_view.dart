@@ -1,5 +1,8 @@
 import 'package:assets_management/app/data/Repo/service_api.dart';
+import 'package:assets_management/app/data/helper/app_colors.dart';
+import 'package:assets_management/app/data/helper/format_waktu.dart';
 import 'package:assets_management/app/data/shared/text_field.dart';
+import 'package:assets_management/app/modules/dashboard/views/widget/drawer_menu.dart';
 import 'package:assets_management/app/modules/master_barang/controllers/master_barang_controller.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/cupertino.dart';
@@ -7,111 +10,212 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 import 'package:widget_zoom/widget_zoom.dart';
 import '../../../data/helper/const.dart';
 import '../../../data/helper/currency_format.dart';
 import '../../../data/helper/custom_dialog.dart';
 import '../../../data/models/assets_model.dart';
+import '../../../data/models/login_model.dart';
 import 'widget/add_edit_assets.dart';
 
 class AssetsView extends GetView {
-  AssetsView({super.key}) {
+  AssetsView({super.key, this.userData}) {
     // dataSource = AssetData(dataAsset: assetC.dataAssetsFiltered);
   }
 
   // late final AssetData dataSource;
+  final Data? userData;
   final assetC = Get.put(MasterBarangController());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            bool isWideScreen = constraints.maxWidth >= 800;
-
-            return FutureBuilder(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWideScreen = constraints.maxWidth >= 800;
+        return Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: FutureBuilder(
               future: assetC.getAssets(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   assetC.dataSource = AssetData(
                     dataAsset: assetC.dataAssetsFiltered,
                     screenWidth: isWideScreen,
+                    userData: userData,
                   );
-                  return PaginatedDataTable2(
-                    // controller: ,
-                    minWidth: 1300,
-                    columnSpacing: 20,
-                    // isHorizontalScrollBarVisible: true,
-                    // isVerticalScrollBarVisible: true,
-                    // fixedLeftColumns: 1,
-                    // columnSpacing: 100,
-                    // horizontalMargin: 40,
-                    smRatio: 0.9, // Rasio lebar kolom S terhadap M
-                    lmRatio: 2.0,
-                    rowsPerPage: assetC.rowsPerPage,
-                    availableRowsPerPage: const [5, 10, 20, 50, 100],
-                    onRowsPerPageChanged: (value) {
-                      if (value != null) {
-                        assetC.rowsPerPage = value;
-                      }
-                    },
-                    renderEmptyRowsInTheEnd: false,
-                    showFirstLastButtons: true,
-                    empty: const Text('Belum ada data'),
-                    headingRowColor: WidgetStateProperty.resolveWith(
-                      (states) => Colors.grey[400],
-                    ),
-                    headingRowHeight: 40,
-                    actions: [
-                      SizedBox(
-                        width: 150,
-                        height: 35,
-                        child: CsTextField(
-                          label: 'Search Data',
-                          maxLines: 1,
-                          onChanged: (val) {
-                            assetC.filterDataAsset(val);
-                            // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
-                            assetC.dataSource.notifyListeners();
+                  return Obx(
+                    () => Stack(
+                      children: [
+                        PaginatedDataTable2(
+                          // controller: ,
+                          minWidth: 1700,
+                          columnSpacing: 20,
+                          // isHorizontalScrollBarVisible: true,
+                          // isVerticalScrollBarVisible: true,
+                          // fixedLeftColumns: 1,
+                          // columnSpacing: 100,
+                          // horizontalMargin: 40,
+                          smRatio: 0.9, // Rasio lebar kolom S terhadap M
+                          lmRatio: 2.0,
+                          rowsPerPage: assetC.rowsPerPage,
+                          availableRowsPerPage: const [5, 10, 20, 50, 100],
+                          onRowsPerPageChanged: (value) {
+                            if (value != null) {
+                              assetC.changeRowsPerPage(value);
+                            }
                           },
+                          renderEmptyRowsInTheEnd: false,
+                          showFirstLastButtons: true,
+                          empty: const Text('Belum ada data'),
+                          headingRowColor: WidgetStateProperty.resolveWith(
+                            (states) => AppColors.itemsBackground,
+                          ),
+                          headingRowHeight: 40,
+                          actions: [
+                            Visibility(
+                              visible: isWideScreen ? true : false,
+                              child: SizedBox(
+                                width: 150,
+                                height: 35,
+                                child: CsTextField(
+                                  controller: assetC.searchAssetController,
+                                  label: 'Search Data',
+                                  maxLines: 1,
+                                  suffixIcon: IconButton(
+                                    onPressed: () {
+                                      assetC.searchAssetController.clear();
+                                      assetC.filterDataAsset('');
+                                      // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+                                      assetC.dataSource.notifyListeners();
+                                    },
+                                    icon: const Icon(Icons.clear, size: 20),
+                                    splashRadius: 10,
+                                  ),
+                                  onChanged: (val) {
+                                    assetC.filterDataAsset(val);
+                                    // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+                                    assetC.dataSource.notifyListeners();
+                                  },
+                                ),
+                              ),
+                            ),
+                            IconButton.filled(
+                              color: mainColor,
+                              icon: const Icon(
+                                HugeIcons.strokeRoundedAddCircle,
+                              ),
+                              // fontSize: 16,
+                              onPressed: () {
+                                // assetC.getAssets();
+                                addEditAssets(
+                                  context,
+                                  '',
+                                  '',
+                                  '',
+                                  '',
+                                  '',
+                                  '',
+                                  '',
+                                  '',
+                                  '',
+                                  '',
+                                );
+                                // assetC.isLoading.value = false;
+                              },
+                              splashRadius: 25,
+                              tooltip: 'Add',
+                              // label: '',
+                            ),
+                          ],
+                          header: const Row(
+                            children: [
+                              Text('Assets', style: TextStyle(fontSize: 15)),
+                            ],
+                          ),
+                          columns: const [
+                            DataColumn2(
+                              label: Text(
+                                'Kode Asset',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              fixedWidth: 212,
+                            ),
+                            DataColumn2(
+                              label: Center(
+                                child: Text(
+                                  'Nama Asset',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              fixedWidth: 220,
+                            ),
+                            DataColumn2(
+                              label: Text(
+                                'Kelompok',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              fixedWidth: 120,
+                            ),
+                            DataColumn2(
+                              label: Text(
+                                'Kategori',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              fixedWidth: 160,
+                            ),
+                            DataColumn2(
+                              label: Text(
+                                'Satuan',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              fixedWidth: 80,
+                            ),
+                            DataColumn2(
+                              label: Text(
+                                'Tanggal Beli',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              fixedWidth: 110,
+                            ),
+                            DataColumn2(
+                              label: Text(
+                                'Harga/Nilai',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              fixedWidth: 130,
+                            ),
+                            DataColumn2(
+                              label: Text(
+                                'Harga/Nilai Saat Ini',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              fixedWidth: 145,
+                            ),
+                            DataColumn2(
+                              label: Center(
+                                child: Text(
+                                  'Action',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              fixedWidth: 130,
+                            ),
+                          ],
+                          source: assetC.dataSource,
                         ),
-                      ),
-                      IconButton.filled(
-                        color: mainColor,
-                        icon: const Icon(HugeIcons.strokeRoundedAddCircle),
-                        // fontSize: 16,
-                        onPressed: () {
-                          // assetC.getAssets();
-                          addEditAssets(
-                            context,
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                          );
-                          // assetC.isLoading.value = false;
-                        },
-                        splashRadius: 25,
-                        tooltip: 'Add',
-                        // label: '',
-                      ),
-                    ],
-                    header: const Row(children: [Text('ASSETS')]),
-                    columns: const [
-                      DataColumn2(label: Text('Kode Asset'), fixedWidth: 210),
-                      DataColumn2(label: Text('Nama Asset'), fixedWidth: 350),
-                      DataColumn2(label: Text('Kategori'), fixedWidth: 160),
-                      DataColumn2(label: Text('Harga/Nilai'), fixedWidth: 100),
-                      DataColumn2(label: Text('Satuan'), fixedWidth: 100),
-                      DataColumn2(label: Text('Action'), fixedWidth: 130),
-                    ],
-                    source: assetC.dataSource,
+                        if (assetC.isChangingRowPerPage.value)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.black45,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   );
                 } else if (snapshot.hasError) {
                   return Text('${snapshot.error}');
@@ -126,18 +230,63 @@ class AssetsView extends GetView {
                   ),
                 );
               },
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+          floatingActionButton:
+              !isWideScreen
+                  ? FloatingActionButton(
+                    backgroundColor: AppColors.itemsBackground,
+                    onPressed: () {
+                      seachForm(context);
+                    },
+                    child: const Icon(Icons.search),
+                  )
+                  : null,
+        );
+      },
     );
   }
 }
 
+seachForm(context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.all(8),
+            content: SizedBox(
+              width: 150,
+              height: 35,
+              child: CsTextField(
+                // readOnly: false,
+                controller: assetC.searchAssetController,
+                maxLines: 1,
+                label: 'Search Data',
+                onChanged: (val) {
+                  assetC.filterDataAsset(val);
+                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                  assetC.dataSource.notifyListeners();
+                },
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 class AssetData extends DataTableSource {
-  AssetData({required this.dataAsset, required bool screenWidth});
+  AssetData({
+    required this.dataAsset,
+    required bool screenWidth,
+    this.userData,
+  });
   final RxList<AssetsModel> dataAsset;
   final bool isWideScreen = Get.width >= 800;
+  final Data? userData;
 
   // updateData(RxList<AssetsModel> newUsers) {
   //   dataAsset.value = newUsers;
@@ -152,6 +301,23 @@ class AssetData extends DataTableSource {
       return null;
     }
     final item = dataAsset[index];
+
+    int yearDifference(DateTime from, DateTime to) {
+      int years = to.year - from.year;
+      // Kurangi 1 tahun jika bulan atau hari to lebih kecil dari from (belum genap tahun)
+      if (to.month < from.month ||
+          (to.month == from.month && to.day < from.day)) {
+        years--;
+      }
+      return years.abs(); // jika ingin hasil absolut (positif)
+    }
+
+    var dateA = DateTime.parse(item.purchaseDate!);
+    var dateB = DateTime.now();
+
+    var differenceDate = yearDifference(dateA, dateB);
+    var differencePrice = int.tryParse(item.price!)! / differenceDate;
+
     return DataRow.byIndex(
       index: index,
       cells: [
@@ -201,31 +367,77 @@ class AssetData extends DataTableSource {
                 ),
               ),
               const SizedBox(width: 5),
-              Text(item.assetName!),
+              SizedBox(
+                width: 115,
+                child: Text(
+                  item.assetName!.capitalize!,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
             ],
           ),
         ),
+        DataCell(Text(item.group!)),
         DataCell(Text(item.categoryName!)),
-        DataCell(Text(CurrencyFormat.convertToIdr(int.parse(item.price!), 0))),
         DataCell(Text(item.satuan!)),
+        DataCell(
+          Text(
+            FormatWaktu.formatTglBlnThn(
+              tanggal: DateTime.parse(item.purchaseDate!),
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            CurrencyFormat.convertToIdr(
+              item.price != '' ? int.parse(item.price!) : 0,
+              0,
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            dateA.year == dateB.year
+                ? CurrencyFormat.convertToIdr(
+                  item.price != '' ? int.parse(item.price!) : 0,
+                  0,
+                )
+                : CurrencyFormat.convertToIdr(
+                  differencePrice != 0 ? differencePrice : 0,
+                  0,
+                ),
+          ),
+        ),
+
         DataCell(
           Row(
             children: [
               IconButton(
                 tooltip: 'Edit',
                 onPressed: () {
-                  addEditAssets(
-                    Get.context!,
-                    item.id,
-                    item.assetName,
-                    item.categoryId,
-                    item.categoryName,
-                    item.price,
-                    item.kelompok,
-                    item.image!,
-                    item.satuan,
-                  );
-                },
+  if (userData?.level != '1') {
+    failedDialog(
+      Get.context!,
+      'ERROR',
+      'Harap hubungi IT untuk perubahan data ini',
+      isWideScreen,
+    );
+  } else {
+    addEditAssets(
+      Get.context!,
+      item.id,
+      item.assetName,
+      item.serialNo,
+      item.categoryId,
+      item.categoryName,
+      item.price,
+      item.purchaseDate,
+      item.kelompok,
+      item.image!,
+      item.satuan,
+    );
+  }
+},
                 icon: const Icon(Icons.edit, size: 20, color: Colors.green),
                 splashRadius: 10,
               ),
@@ -242,15 +454,24 @@ class AssetData extends DataTableSource {
               ),
               IconButton(
                 tooltip: 'Hapus',
-                onPressed: () {
-                  promptDialog(
-                    Get.context!,
-                    'HAPUS',
-                    'Anda yakin ingin menghapus data ini?',
-                    () => assetC.deleteAsset(item.id!, item.image!),
-                    isWideScreen,
-                  );
-                },
+               onPressed: () {
+  if (userData?.level != '1') {
+    failedDialog(
+      Get.context!,
+      'ERROR',
+      'Harap hubungi IT untuk penghapusan data ini',
+      isWideScreen,
+    );
+  } else {
+    promptDialog(
+      Get.context!,
+      'HAPUS',
+      'Anda yakin ingin menghapus data ini?',
+      () => assetC.deleteAsset(item.id!, item.image!),
+      isWideScreen,
+    );
+  }
+},
                 icon: const Icon(Icons.delete, size: 20, color: Colors.red),
                 splashRadius: 10,
               ),

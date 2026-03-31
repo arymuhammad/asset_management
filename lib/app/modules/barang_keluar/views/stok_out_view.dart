@@ -1,3 +1,4 @@
+import 'package:assets_management/app/data/helper/app_colors.dart';
 import 'package:assets_management/app/data/models/barang_masuk_keluar_model.dart';
 import 'package:assets_management/app/data/models/login_model.dart';
 import 'package:data_table_2/data_table_2.dart';
@@ -32,7 +33,7 @@ class StokOutView extends GetView<BarangKeluarController> {
           body: Padding(
             padding: const EdgeInsets.all(12),
             child: FutureBuilder(
-              future: stokOutC.getStokOutData(userData!.kodeCabang!),
+              future: stokOutC.getStokOutData(userData!.kodeCabang!, userData!.levelUser!.split(' ')[0]),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   return PaginatedDataTable2(
@@ -42,7 +43,7 @@ class StokOutView extends GetView<BarangKeluarController> {
                     // horizontalMargin: 40,
                     smRatio: 0.9, // Rasio lebar kolom S terhadap M
                     lmRatio: 2.0,
-                    fixedLeftColumns: 1,
+                    // fixedLeftColumns: 1,
                     rowsPerPage: stokOutC.rowsPerPage,
                     availableRowsPerPage: const [5, 10, 20, 50, 100],
                     onRowsPerPageChanged: (value) {
@@ -57,7 +58,7 @@ class StokOutView extends GetView<BarangKeluarController> {
                       children: [Text('Belum ada data')],
                     ),
                     headingRowColor: WidgetStateProperty.resolveWith(
-                      (states) => Colors.grey[400],
+                      (states) => AppColors.itemsBackground,
                     ),
                     headingRowHeight: 40,
                     actions: [
@@ -96,22 +97,70 @@ class StokOutView extends GetView<BarangKeluarController> {
                       ),
                     ],
                     header: const Text(
-                      'BARANG KELUAR',
+                      'Barang Keluar',
                       style: TextStyle(fontSize: 15),
                     ),
                     columns: const [
-                      DataColumn(label: Text('ID')),
-                      DataColumn(label: Text('Pengirim')),
-                      DataColumn(label: Text('Penerima')),
+                      DataColumn(
+                        label: Text(
+                          'ID',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Pengirim',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Penerima',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
                       DataColumn2(
-                        label: Text('Keterangan'),
+                        label: Text(
+                          'Keterangan',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         size: ColumnSize.L,
                       ),
-                      DataColumn2(label: Text('Total'), fixedWidth: 80),
-                      DataColumn2(label: Text('Dibuat oleh'), fixedWidth: 135),
-                      DataColumn2(label: Text('Tanggal'), fixedWidth: 100),
-                      DataColumn2(label: Text('Status'), fixedWidth: 80),
-                      DataColumn2(label: Text('Action'), fixedWidth: 90),
+                      DataColumn2(
+                        label: Text(
+                          'Total',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        fixedWidth: 80,
+                      ),
+                      DataColumn2(
+                        label: Text(
+                          'Dibuat oleh',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        fixedWidth: 135,
+                      ),
+                      DataColumn2(
+                        label: Text(
+                          'Tanggal',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        fixedWidth: 110,
+                      ),
+                      DataColumn2(
+                        label: Text(
+                          'Status',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        fixedWidth: 90,
+                      ),
+                      DataColumn2(
+                        label: Text(
+                          'Action',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        fixedWidth: 90,
+                      ),
                     ],
                     source: stokOutC.dataSourceOut,
                   );
@@ -133,6 +182,7 @@ class StokOutView extends GetView<BarangKeluarController> {
           floatingActionButton:
               !isWideScreen
                   ? FloatingActionButton(
+                    backgroundColor: AppColors.itemsBackground,
                     onPressed: () {
                       seachForm(context);
                     },
@@ -192,11 +242,11 @@ class StokOutData extends DataTableSource {
       index: index,
       cells: [
         DataCell(Text(item.id!)),
-        DataCell(Text(item.pengirim!)),
-        DataCell(Text(item.penerima!)),
-        DataCell(Text(item.desc!)),
+        DataCell(Text(item.pengirim!.capitalize!, style: const TextStyle(fontSize: 13))),
+        DataCell(Text(item.penerima!.capitalize!, style: const TextStyle(fontSize: 13))),
+        DataCell(Text(item.desc!.capitalize!, style: const TextStyle(fontSize: 13))),
         DataCell(Text(item.qtyAmount!)),
-        DataCell(Text(item.createdBy!)),
+        DataCell(Text(item.createdBy!.capitalize!)),
         DataCell(
           Text(
             FormatWaktu.formatTglBlnThn(
@@ -204,12 +254,12 @@ class StokOutData extends DataTableSource {
             ),
           ),
         ),
-        DataCell(Text(item.status!)),
+        DataCell(Text(item.status!, style: const TextStyle(fontSize: 12),)),
         DataCell(
           Row(
             children: [
               IconButton(
-                tooltip: item.status! == "OPEN" ? 'Edit' : 'Show Detail',
+                tooltip: item.status! == "OPEN" ? 'Edit' : 'Detail',
                 onPressed: () async {
                   loadingDialog("Memuat data...", "");
                   await stokOutC.editDataOut(item.id!);
@@ -244,7 +294,7 @@ class StokOutData extends DataTableSource {
                       'Anda yakin ingin menghapus data ini?',
                       () async {
                         await stokOutC.deleteStokOut(item.id!);
-                        await stokOutC.getStokOutData(stokOutC.fromBranch);
+                        await stokOutC.getStokOutData(stokOutC.fromBranch, stokOutC.levelUser.split(' ')[0]);
                         stokOutC.filterDataStokOut("");
                         // ignore: invalid_use_of_protected_member
                         stokOutC.dataSourceOut.notifyListeners();
@@ -257,6 +307,24 @@ class StokOutData extends DataTableSource {
                     Icons.remove_circle_outline,
                     size: 20,
                     color: Colors.red,
+                  ),
+                  splashRadius: 10,
+                ),
+              ),
+              Visibility(
+                visible: item.status! == "CLOSED" ? true : false,
+                child: IconButton(
+                  tooltip: 'Print',
+                  onPressed: () async {
+                    loadingDialog("Memuat data...", "");
+                    await stokOutC.editDataOut(item.id!);
+                    Get.back();
+                    stokOutC.printDoc(id:item.id, penerima: item.penerima, pembuat:item.createdBy);
+                  },
+                  icon: const Icon(
+                    Icons.print,
+                    size: 20,
+                    color: Colors.lightBlue,
                   ),
                   splashRadius: 10,
                 ),

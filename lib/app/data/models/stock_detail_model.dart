@@ -11,6 +11,7 @@ class StockDetail {
   late String? qtyIn;
   late String? qty;
   late String? createdAt;
+  late String? createdBy;
 
   StockDetail({
     this.id,
@@ -25,6 +26,7 @@ class StockDetail {
     this.qtyIn,
     this.qty,
     this.createdAt,
+    this.createdBy,
   });
 
   StockDetail.fromJson(Map<String, dynamic> json) {
@@ -37,7 +39,8 @@ class StockDetail {
     assetCode = json['asset_code'];
     assetName = json['asset_name'];
     qtyIn = json['qty_in'];
-    qty = json['qty_in'] ?? json['qty_out'];
+    qty = json['qty_in'] ?? json['qty_out']??['qty_adj_in'];
     createdAt = json['created_at'];
+    createdBy = json['created_by'];
   }
 }

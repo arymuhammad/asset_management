@@ -1,3 +1,4 @@
+import 'package:assets_management/app/data/helper/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CsElevatedButtonIcon extends StatelessWidget {
@@ -19,14 +20,14 @@ class CsElevatedButtonIcon extends StatelessWidget {
     return ElevatedButton.icon(
       icon: icon,
       style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
+          backgroundColor: AppColors.itemsBackground,
           foregroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           fixedSize: size),
       onPressed: onPressed,
       label: Text(
-        label != "" ? label! : "Save",
+        label!,
         style: TextStyle(fontSize: fontSize),
       ),
     );

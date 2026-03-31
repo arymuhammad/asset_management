@@ -1,9 +1,10 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
-
+import 'package:assets_management/app/data/helper/app_colors.dart';
 import 'package:assets_management/app/data/helper/const.dart';
 import 'package:assets_management/app/data/helper/custom_dialog.dart';
 import 'package:assets_management/app/data/models/detail_barang_masuk_keluar_model.dart';
 import 'package:assets_management/app/data/shared/elevated_button.dart';
+import 'package:assets_management/app/data/shared/elevated_button_icon.dart';
 import 'package:assets_management/app/data/shared/text_field.dart';
 import 'package:assets_management/app/modules/barang_masuk/controllers/barang_masuk_controller.dart';
 import 'package:assets_management/app/modules/barang_masuk/views/widget/datatable_stok_in.dart';
@@ -12,9 +13,10 @@ import 'package:assets_management/app/modules/stok/controllers/stok_controller.d
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:barcode_widget/barcode_widget.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
-final stokInC = Get.put(BarangMasukController());
-final stokC = Get.put(StokController());
+final stokInC = Get.find<BarangMasukController>();
+final stokC = Get.find<StokController>();
 
 addEditStokIn(
   BuildContext context,
@@ -65,7 +67,7 @@ addEditStokIn(
               ),
               content: Container(
                 height: MediaQuery.of(context).size.height / 1,
-                width: MediaQuery.of(context).size.width / 2,
+                width: MediaQuery.of(context).size.width / 1.5,
                 decoration: const BoxDecoration(color: Colors.white),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -180,107 +182,185 @@ addEditStokIn(
                                   flex: 2,
                                   child: SizedBox(
                                     width: 30,
-                                    child: CsTextField(
-                                      enabled:
-                                          statusData == "OPEN" ||
-                                                  statusData == ""
-                                              ? true
-                                              : false,
-                                      maxLines: 1,
-                                      label: 'Scan Barcode ',
-                                      controller: stokInC.scanInput,
-                                      onFieldSubmitted: (data) async {
-                                        if (data.isNotEmpty) {
-                                          loadingDialog(
-                                            "Mengambil data...",
-                                            "",
-                                          );
-                                          await stokInC.fetchAsset(data);
-                                          Get.back();
-                                          var index1 = stokInC.tempAssetData
-                                              .indexWhere(
-                                                ((val) =>
-                                                    val.assetCode == data),
-                                              );
+                                    height: 47,
+                                    child: FutureBuilder(
+                                      future: stokInC.getAssetByDiv(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          var dataAsset = snapshot.data;
 
-                                          if (index1 != -1) {
-                                            // print('Index: $index1');
-                                            // print(transaksiController.dataBarang[index1].kodeBarang);
-                                            if (stokInC.tempScanData
-                                                    .map((e) => e.assetCode)
-                                                    .toList()
-                                                    .contains(data) ||
-                                                detailData!
-                                                    .map((e) => e.assetCode)
-                                                    .toList()
-                                                    .contains(data)) {
-                                              showToast(
-                                                "Data ini sudah ada",
-                                                "red",
-                                              );
-                                              // stokInC.scanInput.clear();
-                                            } else {
-                                              if (detailData.isNotEmpty) {
-                                                stokInC.detailStokIn.add(
-                                                  DetailBarangMasukKeluar(
-                                                    assetCode:
-                                                        stokInC
-                                                            .tempAssetData
-                                                            .first
-                                                            .assetCode,
-                                                    assetName:
-                                                        stokInC
-                                                            .tempAssetData
-                                                            .first
-                                                            .assetName,
-                                                    group:
-                                                        stokInC
-                                                            .tempAssetData
-                                                            .first
-                                                            .group,
-                                                    qtyIn: '0',
-                                                    good: '0',
-                                                    bad: '0',
-                                                  ),
-                                                );
-                                              } else {
-                                                stokInC.tempScanData.add(
-                                                  DetailBarangMasukKeluar(
-                                                    assetCode:
-                                                        stokInC
-                                                            .tempAssetData
-                                                            .first
-                                                            .assetCode,
-                                                    assetName:
-                                                        stokInC
-                                                            .tempAssetData
-                                                            .first
-                                                            .assetName,
-                                                    group:
-                                                        stokInC
-                                                            .tempAssetData
-                                                            .first
-                                                            .group,
-                                                    qtyIn: '0',
-                                                    good: '0',
-                                                    bad: '0',
-                                                  ),
-                                                );
-                                              }
-                                            }
-                                            stokInC.scanInput.clear();
-                                          } else {
-                                            showToast(
-                                              "Data tidak ditemukan",
-                                              "red",
-                                            );
+                                          List<Map<String, String>> assetList =
+                                              [];
+                                          for (var data in dataAsset!) {
+                                            // Simpan data sebagai map dengan nama dan kode cabang
+                                            assetList.add({
+                                              "nama": data.assetName ?? '',
+                                              "group": data.group ?? '',
+                                            });
                                           }
-                                        } else {
-                                          showToast(
-                                            "Harap masukkan data terlebih dahulu",
-                                            "red",
+                                          // List<String> allAsset = <String>[];
+                                          // dataAsset!.map((data) {
+                                          //   allAsset.add(data.assetName!);
+                                          // }).toList();
+
+                                          return TypeAheadFormField<
+                                            Map<String, String>
+                                          >(
+                                            autoFlipDirection: true,
+                                            textFieldConfiguration:
+                                                TextFieldConfiguration(
+                                                  controller: stokInC.asset,
+                                                  // ..text = userData!.levelUser!,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Cari Asset',
+                                                    border:
+                                                        const OutlineInputBorder(),
+                                                    filled: true,
+                                                    fillColor: Colors.white,
+                                                    suffixIcon: IconButton(
+                                                      onPressed: () {
+                                                        stokInC.asset.clear();
+                                                      },
+                                                      icon: const Icon(
+                                                        Icons
+                                                            .highlight_remove_rounded,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                            suggestionsCallback: (pattern) {
+                                              return assetList.where(
+                                                (option) => option['nama']!
+                                                    .toLowerCase()
+                                                    .contains(
+                                                      pattern.toLowerCase(),
+                                                    ),
+                                              );
+                                            },
+                                            itemBuilder: (context, suggestion) {
+                                              return ListTile(
+                                                tileColor: Colors.white,
+                                                title: Text(
+                                                  suggestion['nama']!
+                                                          .capitalize ??
+                                                      "", style: const TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                                subtitle: Text(
+                                                  suggestion['group']!
+                                                          .capitalize ??
+                                                      "",
+                                                ),
+                                              );
+                                            },
+                                            onSuggestionSelected: (suggestion) {
+                                              stokInC.asset.text =
+                                                  suggestion['nama'] ?? "";
+                                              for (
+                                                int i = 0;
+                                                i < dataAsset.length;
+                                                i++
+                                              ) {
+                                                if (dataAsset[i].assetName ==
+                                                        suggestion['nama'] &&
+                                                    dataAsset[i].group ==
+                                                        suggestion['group']) {
+                                                  if (stokInC.tempScanData
+                                                          .map(
+                                                            (e) => e.assetCode,
+                                                          )
+                                                          .toList()
+                                                          .contains(
+                                                            dataAsset[i]
+                                                                .assetCode,
+                                                          ) ||
+                                                      detailData!
+                                                          .map(
+                                                            (e) => e.assetCode,
+                                                          )
+                                                          .toList()
+                                                          .contains(
+                                                            dataAsset[i]
+                                                                .assetCode,
+                                                          )) {
+                                                    showToast(
+                                                      "Data ini sudah ada",
+                                                      "red",
+                                                    );
+                                                    // stokInC.scanInput.clear();
+                                                  } else {
+                                                    if (detailData.isNotEmpty) {
+                                                      stokInC.detailStokIn.add(
+                                                        DetailBarangMasukKeluar(
+                                                          assetCode:
+                                                              dataAsset[i]
+                                                                  .assetCode,
+                                                          assetName:
+                                                              dataAsset[i]
+                                                                  .assetName,
+                                                          group:
+                                                              dataAsset[i]
+                                                                  .group,
+                                                          qtyTotal: '0',
+                                                          qtyIn: '0',
+                                                          neww: '0',
+                                                          sec: '0',
+                                                          bad: '0',
+                                                        ),
+                                                      );
+                                                      stokInC.asset.clear();
+                                                    } else {
+                                                      stokInC.tempScanData.add(
+                                                        DetailBarangMasukKeluar(
+                                                          assetCode:
+                                                              dataAsset[i]
+                                                                  .assetCode,
+                                                          assetName:
+                                                              dataAsset[i]
+                                                                  .assetName,
+                                                          group:
+                                                              dataAsset[i]
+                                                                  .group,
+                                                          qtyTotal: '0',
+                                                          qtyIn: '0',
+                                                          neww: '0',
+                                                          sec: '0',
+                                                          bad: '0',
+                                                        ),
+                                                      );
+
+                                                      stokInC.asset.clear();
+                                                    }
+                                                    // stokInC.selectedLevel.value =
+                                                    //     dataAsset[i].id!;
+                                                    // stokInC.levelName.value =
+                                                    //     dataAsset[i].namaLevel!;
+                                                    // stokInC.vst.value = dataAsset[i].visit!;
+                                                    // stokInC.cekStok.value =
+                                                    //     dataAsset[i].cekStok!;
+                                                  }
+                                                }
+                                              }
+                                            },
                                           );
+                                        } else if (snapshot.hasError) {
+                                          return Text('${snapshot.error}');
                                         }
+                                        return const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Center(
+                                              child: SizedBox(
+                                                height: 10,
+                                                width: 10,
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              ),
+                                            ),
+                                            SizedBox(width: 5),
+                                            Text('Loading...'),
+                                          ],
+                                        );
                                       },
                                     ),
                                   ),
@@ -328,13 +408,16 @@ addEditStokIn(
                       if (id != ""
                           ? stokInC.detailStokIn.isNotEmpty
                           : stokInC.tempScanData.isNotEmpty) {
+                        Get.back();
+                        loadingDialog("Mengirim data", "");
+
                         await stokInC.saveDataIn(
                           id != "" ? id! : "",
                           id != "" ? "update_data" : "add_stokIn",
                           kodePenerima,
                           kodePengirim,
                         );
-                        await stokInC.getStokInData(stokInC.fromBranch);
+
                         // ignore: invalid_use_of_protected_member
                         stokInC.dataSource.notifyListeners();
                       } else {
@@ -354,34 +437,40 @@ addEditStokIn(
                 Visibility(
                   visible:
                       statusData == "OPEN" || statusData == "" ? true : false,
-                  child: CsElevatedButton(
-                    onPressed: () async {
-                      if (stokInC.tempScanData.isNotEmpty ||
-                          stokInC.detailStokIn.isNotEmpty) {
-                        await stokInC.submitDataIn(
-                          id != "" ? id! : "",
-                          id != "" ? "update_data" : "add_stokIn",
-                          kodePenerima,
-                          kodePengirim,
-                          desc,
-                        );
-                        await stokInC.getStokInData(stokInC.fromBranch);
-                        stokInC.filterDataStokIn("");
-                        // ignore: invalid_use_of_protected_member
-                        stokInC.dataSource.notifyListeners();
-                        stokInC.generateNumbId();
-                      } else {
-                        failedDialog(
-                          context,
-                          'ERROR',
-                          'Tidak ada data yang disimpan',
-                          isWideScreen,
-                        );
-                      }
-                    },
-                    color: Colors.blue,
-                    fontsize: 12,
-                    label: pengirim == penerima ? 'SUBMIT' : 'CONFIRM',
+                  child: Obx(
+                    () => CsElevatedButton(
+                      onPressed:
+                          !stokInC.canSubmit
+                              ? null
+                              : () async {
+                                // if (stokInC.tempScanData.isNotEmpty ||
+                                //     stokInC.detailStokIn.isNotEmpty) {
+                                Get.back();
+                                loadingDialog("Mengirim data", "");
+                                await stokInC.submitDataIn(
+                                  id != "" ? id! : "",
+                                  id != "" ? "update_data" : "add_adjIn",
+                                  kodePenerima,
+                                  kodePengirim,
+                                  desc,
+                                  author,
+                                );
+                                stokInC.filterDataStokIn("");
+                                // ignore: invalid_use_of_protected_member
+                                stokInC.dataSource.notifyListeners();
+                                // } else {
+                                //   failedDialog(
+                                //     context,
+                                //     'ERROR',
+                                //     'Tidak ada data yang disimpan',
+                                //     isWideScreen,
+                                //   );
+                                // }
+                              },
+                      color: Colors.blue,
+                      fontsize: 12,
+                      label: pengirim == penerima ? 'SUBMIT' : 'CONFIRM',
+                    ),
                   ),
                 ),
                 CsElevatedButton(
@@ -392,7 +481,11 @@ addEditStokIn(
                           context,
                           'REJECT',
                           'Anda yakin ingin menolak data ini?',
-                          () => stokInC.rejectDataIn(id!),
+                          () async {
+                            Get.back();
+                            loadingDialog('Memproses data...', "");
+                            await stokInC.rejectDataIn(id!);
+                          },
                           isWideScreen,
                         );
                       } else {
@@ -419,7 +512,10 @@ addEditStokIn(
                       // stokInC.formKey.currentState!.reset();
                     }
                   },
-                  color: Colors.red,
+                  color:
+                      statusData == "OPEN" && pengirim != penerima
+                          ? Colors.red
+                          : AppColors.itemsBackground,
                   fontsize: 12,
                   label:
                       statusData == "OPEN" && pengirim != penerima
@@ -427,6 +523,15 @@ addEditStokIn(
                           : statusData == "OPEN" || statusData == ""
                           ? 'CANCEL'
                           : 'CLOSE',
+                ),
+                Visibility(
+                  visible: statusData == "OPEN" && pengirim != penerima,
+                  child: CsElevatedButton(
+                    color: AppColors.itemsBackground,
+                    fontsize: 12,
+                    label: 'CLOSE',
+                    onPressed: () => Get.back(),
+                  ),
                 ),
               ],
             );

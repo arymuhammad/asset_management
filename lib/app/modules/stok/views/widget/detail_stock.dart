@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 
 import '../../../../data/models/stock_detail_model.dart';
 
-detailStock(
-  BuildContext context,
-  String type,
-  String itemCode,
-  String itemName,
-  String cabang,
-) async {
+detailStock({
+  required BuildContext context,
+  required String type,
+  required String itemCode,
+  required String itemName,
+  required String cabang,
+}) async {
   showDialog(
     context: context,
     builder:
@@ -24,7 +24,7 @@ detailStock(
               content: Container(
                 width:
                     MediaQuery.of(context).size.width /
-                    (isWideScreen ? 1.7 : 1.6),
+                    (isWideScreen ? 1.3 : 1.6),
                 height: MediaQuery.of(context).size.height / 1.3,
                 decoration: const BoxDecoration(color: Colors.white),
                 child: Column(
@@ -43,9 +43,25 @@ detailStock(
                                   cabang,
                                   itemCode,
                                 ),
+                                stokC.getDetailStock(
+                                  'adj_in',
+                                  cabang,
+                                  itemCode,
+                                ),
+                                stokC.getDetailStock(
+                                  'adj_out',
+                                  cabang,
+                                  itemCode,
+                                ),
                               ])
                               : stokC.getDetailStock(
-                                type == 'IN' ? 'stock_in' : 'stock_out',
+                                type == 'ADJ IN'
+                                    ? 'adj_in'
+                                    : type == 'ADJ OUT'
+                                    ? 'adj_out'
+                                    : type == 'IN'
+                                    ? 'stock_in'
+                                    : 'stock_out',
                                 cabang,
                                 itemCode,
                               ),
@@ -59,17 +75,30 @@ detailStock(
                             // Gabungkan hasil IN dan OUT tanpa duplikat
                             final inList = results[0];
                             final outList = results[1];
-                            combinedData = [...inList, ...outList];
-                            final totalIn = inList.fold<int>(
+                            final adjInList = results[2];
+                            final adjOutList = results[3];
+
+                            combinedData = [
+                              ...inList,
+                              ...outList,
+                              ...adjInList,
+                              ...adjOutList,
+                            ];
+                            final totalIn = [...inList, ...adjInList].fold<int>(
                               0,
                               (prev, item) =>
                                   prev + (int.tryParse(item.qty ?? '0') ?? 0),
                             );
-                            final totalOut = outList.fold<int>(
+
+                            final totalOut = [
+                              ...outList,
+                              ...adjOutList,
+                            ].fold<int>(
                               0,
                               (prev, item) =>
                                   prev + (int.tryParse(item.qty ?? '0') ?? 0),
                             );
+
                             stokC.grandTotal.value = totalIn - totalOut;
                           } else {
                             combinedData = snapshot.data as List<StockDetail>;

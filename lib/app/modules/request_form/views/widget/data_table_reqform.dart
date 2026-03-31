@@ -1,4 +1,6 @@
+import 'package:assets_management/app/data/helper/app_colors.dart';
 import 'package:assets_management/app/data/helper/currency_format.dart';
+import 'package:assets_management/app/data/helper/custom_dialog.dart';
 import 'package:assets_management/app/data/shared/text_field.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
@@ -10,9 +12,18 @@ import '../../../../data/models/request_detail_model.dart';
 import 'add_request.dart';
 
 class DataTableReqform extends StatelessWidget {
-  const DataTableReqform({super.key, this.listData});
+  const DataTableReqform({
+    super.key,
+    required this.listData,
+    this.id,
+    this.branch,
+    this.desc,
+  });
 
-  final RxList<RequestDetailModel>? listData;
+  final RxList<RequestDetailModel> listData;
+  final String? id;
+  final String? branch;
+  final String? desc;
 
   @override
   Widget build(BuildContext context) {
@@ -43,31 +54,35 @@ class DataTableReqform extends StatelessWidget {
               lmRatio: 1,
               minWidth: 1200,
               fixedLeftColumns: 1,
-              columns: const [
-                DataColumn2(label: Text('NO'), fixedWidth: 50),
-                DataColumn2(label: Text('ITEM'), fixedWidth: 100),
-                DataColumn2(label: Text('DESKRIPSI'), fixedWidth: 200),
-                DataColumn2(label: Text('SOH'), fixedWidth: 100),
-                DataColumn2(label: Text('REQUEST'), fixedWidth: 120),
-                DataColumn2(label: Text('SATUAN'), fixedWidth: 120),
-                DataColumn2(label: Text('HARGA/NILAI'), fixedWidth: 150),
-                DataColumn2(label: Text('SUB TOTAL'), fixedWidth: 150),
+              columns: [
+                const DataColumn2(label: Text('NO'), fixedWidth: 50),
+                const DataColumn2(label: Text('ITEM'), fixedWidth: 100),
+                const DataColumn2(label: Text('DESKRIPSI'), fixedWidth: 200),
+                const DataColumn2(label: Text('SOH'), fixedWidth: 100),
+                const DataColumn2(label: Text('REQUEST'), fixedWidth: 120),
+                const DataColumn2(label: Text('SATUAN'), fixedWidth: 120),
+                const DataColumn2(label: Text('HARGA/NILAI'), fixedWidth: 150),
+                const DataColumn2(label: Text('SUB TOTAL'), fixedWidth: 150),
+                DataColumn2(
+                  label: Text(branch == "HO000" ? 'ACTION' : 'STATUS'),
+                  fixedWidth: id!.isNotEmpty ? 100 : 0,
+                ),
               ],
               rows:
-                  listData!.asMap().entries.map((entry) {
+                  listData.asMap().entries.map((entry) {
                     int index = entry.key;
                     RequestDetailModel data = entry.value;
                     int price = int.tryParse(data.price ?? '0') ?? 0;
                     int qtyReq = int.tryParse(data.qtyReq ?? '0') ?? 0;
-                    requestC.subTotal.value = qtyReq * price;
-                    requestC.grandTotal.value = requestC.tempData.fold(
-                      0,
-                      (prev, item) =>
-                          prev +
-                          ((int.tryParse(item.price ?? '0') ?? 0) *
-                              (int.tryParse(item.qtyReq ?? '0') ?? 0)),
-                    );
-                    requestC.tempData.refresh();
+                    final int subTotal = qtyReq * price;
+                    // requestC.grandTotal.value = requestC.tempData.fold(
+                    //   0,
+                    //   (prev, item) =>
+                    //       prev +
+                    //       ((int.tryParse(item.price ?? '0') ?? 0) *
+                    //           (int.tryParse(item.qtyReq ?? '0') ?? 0)),
+                    // );
+                    // requestC.tempData.refresh();
                     return DataRow(
                       color:
                           index % 2 == 0
@@ -80,10 +95,12 @@ class DataTableReqform extends StatelessWidget {
                         DataCell(Text('${index + 1}')),
                         DataCell(
                           WidgetZoom(
-                            heroAnimationTag: 'product${data.assetName}',
+                            heroAnimationTag:
+                                'product_${data.assetCode ?? index}',
                             zoomWidget: ClipRect(
                               child: Image.network(
                                 '${ServiceApi().baseUrl}${data.image ?? ''}',
+                                fit: BoxFit.cover,
                                 errorBuilder:
                                     (context, error, stackTrace) => Image.asset(
                                       'assets/image/no-image.jpg',
@@ -92,12 +109,15 @@ class DataTableReqform extends StatelessWidget {
                             ),
                           ),
                         ),
-                        DataCell(Text(data.assetName ?? '')),
+                        DataCell(Text((data.assetName ?? '').capitalize ?? '')),
                         DataCell(Text(data.qtyStock?.toString() ?? '0')),
                         DataCell(
                           SizedBox(
                             height: 30,
                             child: CsTextField(
+                              enabled:
+                                  data.sts != "accepted" &&
+                                  data.sts != "canceled",
                               maxLines: 1,
                               label: '',
                               inputFormatters: [
@@ -110,7 +130,8 @@ class DataTableReqform extends StatelessWidget {
                                   val = '0';
                                 }
                                 data.qtyReq = val;
-                                listData!.refresh();
+                                requestC.recalcTotal();
+                                listData.refresh();
                               },
                             ),
                           ),
@@ -118,13 +139,99 @@ class DataTableReqform extends StatelessWidget {
                         DataCell(Text(data.unit ?? '')),
                         DataCell(Text(CurrencyFormat.convertToIdr(price, 0))),
                         DataCell(
-                          Text(
-                            CurrencyFormat.convertToIdr(
-                              requestC.subTotal.value,
-                              0,
-                            ),
-                          ),
+                          Text(CurrencyFormat.convertToIdr(subTotal, 0)),
                         ),
+                        id!.isNotEmpty
+                            ? DataCell(
+                              Visibility(
+                                visible: (data.qtyReq ?? '0') != "0",
+                                child:
+                                    (data.sts ?? "") == ""
+                                        ? Row(
+                                          children: [
+                                            InkWell(
+                                              onTap: () async {
+                                                loadingDialog(
+                                                  "memuat data",
+                                                  '',
+                                                );
+                                                await requestC.accReqItem(
+                                                  id!,
+                                                  data.assetCode!,
+                                                );
+                                                await requestC.getDetailRequest(
+                                                  id!,
+                                                );
+                                                Get.back();
+                                                Get.back();
+                                                requestC.grandTotal.value = 0;
+
+                                                addRequest(
+                                                  Get.context!,
+                                                  id!,
+                                                  '',
+                                                  branch!,
+                                                  desc!,
+                                                  '',
+                                                  requestC.detailRequest,
+                                                );
+                                              },
+                                              child: const Icon(
+                                                Icons.check_circle,
+                                                color:
+                                                    AppColors
+                                                        .contentColorGreenAccent,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            InkWell(
+                                              onTap: () async {
+                                                loadingDialog(
+                                                  "memuat data",
+                                                  '',
+                                                );
+                                                await requestC.cnlReqItem(
+                                                  id!,
+                                                  data.assetCode!,
+                                                );
+                                                await requestC.getDetailRequest(
+                                                  id!,
+                                                );
+                                                Get.back();
+                                                Get.back();
+                                                requestC.grandTotal.value = 0;
+
+                                                addRequest(
+                                                  Get.context!,
+                                                  id!,
+                                                  '',
+                                                  branch!,
+                                                  desc!,
+                                                  '',
+                                                  requestC.detailRequest,
+                                                );
+                                              },
+                                              child: const Icon(
+                                                Icons.cancel,
+                                                color:
+                                                    AppColors.contentColorRed,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                        : Text(
+                                          data.sts!.capitalize!,
+                                          style: TextStyle(
+                                            color:
+                                                data.sts == "accepted"
+                                                    ? AppColors
+                                                        .contentColorGreenAccent
+                                                    : AppColors.contentColorRed,
+                                          ),
+                                        ),
+                              ),
+                            )
+                            : DataCell(Container()),
                       ],
                     );
                   }).toList(),

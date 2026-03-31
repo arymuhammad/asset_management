@@ -1,0 +1,6 @@
+{
+  "API_SERVER": "https://assets.urbanco.id/api/",
+  "API_LOCAL": "http://103.156.15.61/asset_management.bak/api/",
+  "APP_NAME": "URBAN&CO ASSETS MANAGEMENT",
+  "FEATURE_X_ENABLED": true
+}

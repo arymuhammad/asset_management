@@ -59,20 +59,25 @@ addEditCat(
                       label: 'Nama Kategori Asset',
                       onFieldSubmitted: (val) async {
                         loadingDialog("Memeriksa data", "");
-                        await catC.verifiedAssetCat(val);
+                        await catC.verifiedAssetCat(
+                          val,
+                          catC.assetsSelected.value,
+                        );
                         Get.back();
                         if (catC.checkCatAssets.value.total == "1") {
                           failedDialog(
                             Get.context!,
                             'ERROR',
                             'Kategori ini sudah terdaftar',
-                            isWideScreen
+                            isWideScreen,
                           );
                         } else {
                           await catC.assetsCatSubmit(
                             id != "" ? "update_kategori" : "add_kategori",
                             id,
                           );
+                          // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                          catC.category.notifyListeners();
                         }
                       },
                     ),
@@ -89,10 +94,28 @@ addEditCat(
               CsElevatedButton(
                 onPressed: () async {
                   if (catC.formKeyCat.currentState!.validate()) {
-                    await catC.assetsCatSubmit(
-                      id != "" ? "update_kategori" : "add_kategori",
-                      id,
+                    loadingDialog("Memeriksa data", "");
+                    await catC.verifiedAssetCat(
+                      catC.catName.text,
+                      catC.assetsSelected.value,
                     );
+                    Get.back();
+                    if (catC.checkCatAssets.value.total == "1") {
+                      failedDialog(
+                        Get.context!,
+                        'ERROR',
+                        'Kategori ini sudah terdaftar',
+                        isWideScreen,
+                      );
+                    } else {
+                      await catC.assetsCatSubmit(
+                        id != "" ? "update_kategori" : "add_kategori",
+                        id,
+                      );
+
+                      // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                      catC.category.notifyListeners();
+                    }
                     // } else {
                     //   showToast('Harap isi bagian yang kosong', 'red');
                   }
@@ -104,6 +127,7 @@ addEditCat(
               CsElevatedButton(
                 onPressed: () {
                   Get.back();
+                  catC.assetsSelected.value = "";
                   catC.formKeyCat.currentState!.reset();
                 },
                 color: Colors.red,

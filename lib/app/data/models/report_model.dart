@@ -1,5 +1,7 @@
 class Report {
   late String? id;
+  late String? div;
+  late String? kodeCabang;
   late String? cabang;
   late String? report;
   late String? date;
@@ -16,6 +18,8 @@ class Report {
 
   Report({
     this.id,
+    this.div,
+    this.kodeCabang,
     this.cabang,
     this.report,
     this.date,
@@ -32,11 +36,14 @@ class Report {
   });
 
   Report.fromJson(Map<String, dynamic> json) {
-    id = json['id']??json['report_id']??'';
-    cabang = json['cabang']??'';
-    report = json['report_desc']??'';
-    date = json['date']??'';
-    imageBf = json['report_image']??'';
+    id = json['report_id'] ?? '';
+    div = json['division'] ?? '';
+    kodeCabang = json['branch'] ?? '';
+    cabang = json['cabang'] ?? '';
+    report = json['report_desc'] ?? '';
+    date = json['date'] ?? '';
+    imageBf = json['report_image'] ?? '';
+    imageAf = json['report_image_after'] ?? '';
     priority = json['priority'] ?? '';
     status = json['status'] ?? '';
     keterangan = json['keterangan'] ?? '';

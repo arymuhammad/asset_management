@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 
 class CsTextField extends StatelessWidget {
   final String label;
-  final Widget? icon;
+  final TextStyle? labelStyle;
+  final Widget? suffixIcon;
   final int? maxLines;
   final TextEditingController? controller;
   final bool? enabled;
@@ -14,7 +15,8 @@ class CsTextField extends StatelessWidget {
   const CsTextField({
     super.key,
     required this.label,
-    this.icon,
+    this.labelStyle,
+    this.suffixIcon,
     this.maxLines,
     this.controller,
     this.enabled,
@@ -32,10 +34,11 @@ class CsTextField extends StatelessWidget {
       // readOnly: readOnly,
       maxLines: maxLines,
       decoration: InputDecoration(
+        labelStyle: labelStyle,
         border: const OutlineInputBorder(),
         labelText: label,
-        suffixIcon: icon,
-        contentPadding: const EdgeInsets.all(8),
+        suffixIcon: suffixIcon,
+        contentPadding: const EdgeInsets.all(5),
         fillColor: Colors.white,
         filled: true,
       ),

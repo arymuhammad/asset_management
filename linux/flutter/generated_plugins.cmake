@@ -3,6 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  image_clipboard
+  pasteboard
   printing
   rive_common
 )

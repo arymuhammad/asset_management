@@ -1,53 +1,63 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:assets_management/app/data/models/adj_model.dart';
 import 'package:assets_management/app/data/models/assets_model.dart';
 import 'package:assets_management/app/data/models/barang_masuk_keluar_model.dart';
 import 'package:assets_management/app/data/models/category_assets_model.dart';
 import 'package:assets_management/app/data/models/detail_barang_masuk_keluar_model.dart';
+import 'package:assets_management/app/data/models/detail_summ_model.dart';
+import 'package:assets_management/app/data/models/report_by_store_model.dart';
 import 'package:assets_management/app/data/models/report_model.dart';
 import 'package:assets_management/app/data/models/request_detail_model.dart';
+import 'package:assets_management/app/data/models/so_detail_model.dart';
+import 'package:assets_management/app/data/models/so_model.dart';
 import 'package:assets_management/app/data/models/stock_detail_model.dart';
 import 'package:assets_management/app/data/models/stok_model.dart';
-import 'package:assets_management/app/modules/stok/views/widget/detail_stock.dart';
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../helper/custom_dialog.dart';
 import '../models/cabang_model.dart';
+import '../models/detail_adj_model.dart';
 import '../models/login_model.dart';
 import '../models/request_model.dart';
+import '../models/stock_response.dart';
 import 'app_exceptions.dart';
 import 'package:http_parser/http_parser.dart';
 
 class ServiceApi {
-  var baseUrl = "http://103.156.15.61/asset_management/api/";
-  // var baseUrl = "http://localhost/asset_management/api/";
+  // var baseUrl = "https://assets.urbanco.id/api/";
+  // var baseUrl = "http://103.156.15.61/asset_management.bak/api/";
+  var baseUrl = "http://127.0.0.1:8080/api/";
+  // var baseUrl = "http://192.168.101.190/asset_management/api/";
   var isLoading = false.obs;
 
   loginUser(data) async {
     try {
-      final response = await http
-          .post(Uri.parse('${baseUrl}auth'), body: data)
-          .timeout(
-            const Duration(minutes: 1),
-            onTimeout: () {
-              return timeOut(data);
-            },
-          );
+      // print('${baseUrl}auth/login');
+      // print(data);
+      final response = await http.post(
+        Uri.parse('${baseUrl}auth/login'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      // print(response.body);
+
       switch (response.statusCode) {
         case 200:
           final result = json.decode(response.body);
           return Login.fromJson(result);
+
         case 400:
         case 401:
         case 402:
         case 404:
           final result = json.decode(response.body);
-          throw FetchDataException(result["message"]);
+          throw Exception(result["message"]);
+
         default:
-          throw FetchDataException('Something went wrong.');
+          throw Exception("Server error: ${response.statusCode}");
       }
     } on FetchDataException catch (_) {
       // print('error caught: ${e.message}');
@@ -101,7 +111,7 @@ class ServiceApi {
   getBrandCabang() async {
     try {
       final response = await http.get(Uri.parse('${baseUrl}brand_cabang'));
-      // log('${baseUrl}brand_cabang');
+
       switch (response.statusCode) {
         case 200:
           List<dynamic> result = json.decode(response.body)['data'];
@@ -150,7 +160,6 @@ class ServiceApi {
               throw Exception(response.reasonPhrase);
           }
         } on Exception catch (e) {
-          // rethrow;
           showToast('$e', 'red');
         }
         break;
@@ -168,7 +177,6 @@ class ServiceApi {
               throw Exception(response.reasonPhrase);
           }
         } on Exception catch (e) {
-          // rethrow;
           showToast('$e', 'red');
         }
         break;
@@ -186,7 +194,6 @@ class ServiceApi {
               throw Exception(response.reasonPhrase);
           }
         } on Exception catch (e) {
-          // rethrow;
           showToast('$e', 'red');
         }
         break;
@@ -204,7 +211,6 @@ class ServiceApi {
               throw Exception(response.reasonPhrase);
           }
         } on Exception catch (e) {
-          // rethrow;
           showToast('$e', 'red');
         }
         break;
@@ -213,11 +219,11 @@ class ServiceApi {
           final response = await http
               .post(Uri.parse('${baseUrl}assets_cat'), body: data)
               .timeout(const Duration(minutes: 1));
-          //print('${baseUrl}assets_cat');
+
           switch (response.statusCode) {
             case 200:
               List<dynamic> result = json.decode(response.body)['data'];
-              //print(result);
+
               List<CategoryAssets> data =
                   result.map((e) => CategoryAssets.fromJson(e)).toList();
               return data;
@@ -225,7 +231,6 @@ class ServiceApi {
               throw Exception(response.reasonPhrase);
           }
         } on Exception catch (e) {
-          // rethrow;
           showToast('$e', 'red');
         }
         break;
@@ -284,19 +289,25 @@ class ServiceApi {
           //
           // .timeout(const Duration(minutes: 3))
           // .then((val) => showToast('data sukses dikirim', 'green'))
-
-          // final response =
-          //     await http.post(Uri.parse('${baseUrl}asset'), body: data);
-
-          // switch (response.statusCode) {
-          //   case 200:
-          //     Get.back();
-          //     dialogMsgScsUpd('Info', 'Sukses');
-          //   default:
-          //     throw Exception(response.reasonPhrase);
-          // }
         } on Exception catch (e) {
-          // rethrow;
+          Get.back();
+          showToast('$e', 'red');
+        }
+        break;
+      case 'get_asset':
+        try {
+          final response = await http
+              .post(Uri.parse('${baseUrl}asset'), body: data)
+              .timeout(const Duration(minutes: 1));
+          switch (response.statusCode) {
+            case 200:
+              dynamic result = json.decode(response.body)['data'];
+              AssetsModel data = AssetsModel.fromJson(result);
+              return data;
+            default:
+              throw Exception(response.reasonPhrase);
+          }
+        } on Exception catch (e) {
           Get.back();
           showToast('$e', 'red');
         }
@@ -315,7 +326,6 @@ class ServiceApi {
               throw Exception(response.reasonPhrase);
           }
         } on Exception catch (e) {
-          // rethrow;
           showToast('$e', 'red');
         }
         break;
@@ -360,32 +370,50 @@ class ServiceApi {
     }
   }
 
-  stokCRUD(Map<String, dynamic> data) async {
+  Future<DetailSummModel?> stokCRUD(Map<String, dynamic> payload) async {
     try {
       final response = await http
-          .post(Uri.parse('${baseUrl}stock'), body: data)
+          .post(Uri.parse('${baseUrl}stock'), body: payload)
           .timeout(const Duration(minutes: 1));
 
-      switch (response.statusCode) {
-        case 200:
-          List<dynamic> result = json.decode(response.body)['data'];
-          if (data['type'] == "stock_in" || data['type'] == "stock_out") {
-            List<StockDetail> data =
-                result.map((e) => StockDetail.fromJson(e)).toList();
-            if (data == []) return null;
-            return data;
-          } else {
-            List<Stok> data = result.map((e) => Stok.fromJson(e)).toList();
-
-            return data;
-          }
-        //print(result);
-        default:
-          throw Exception(response.reasonPhrase);
+      if (response.statusCode != 200) {
+        throw Exception(response.reasonPhrase);
       }
-    } on Exception catch (e) {
-      // rethrow;
-      showToast('$e', 'red');
+
+      final decoded = json.decode(response.body);
+
+      final List<dynamic>? rawData = decoded['data'];
+
+      if (rawData == null || rawData.isEmpty) {
+        return null;
+      }
+
+      final String type = payload['type'] ?? '';
+
+      /// ================= STOCK IN / OUT =================
+      if (['stock_in', 'stock_out'].contains(type)) {
+        final result = rawData.map((e) => StockDetail.fromJson(e)).toList();
+
+        return DetailSummModel(stockDetail: result);
+      }
+
+      /// ================= ADJ IN / OUT =================
+      if (['adj_in', 'adj_out'].contains(type)) {
+        final result = rawData.map((e) => DetailAdjModel.fromJson(e)).toList();
+
+        return DetailSummModel(adjDetail: result);
+      }
+
+      /// ================= DEFAULT =================
+      final result = rawData.map((e) => Stok.fromJson(e)).toList();
+
+      return DetailSummModel(stock: result);
+    } on TimeoutException {
+      showToast('Request timeout', 'red');
+      return null;
+    } catch (e) {
+      showToast(e.toString(), 'red');
+      return null;
     }
   }
 
@@ -409,7 +437,6 @@ class ServiceApi {
       //     );
       // }
     } on FetchDataException catch (e) {
-      // print('error caught: ${e.message}');
       showToast("${e.message}", 'red');
     }
   }
@@ -421,7 +448,7 @@ class ServiceApi {
       final response = await http
           .post(Uri.parse('${baseUrl}stock_in'), body: data)
           .timeout(const Duration(minutes: 1));
-      // print('${baseUrl}stok_in');
+      // print('${baseUrl}stock_in');
       switch (response.statusCode) {
         case 200:
           if (data['type'] == 'add_stokIn') {
@@ -436,7 +463,7 @@ class ServiceApi {
             showToast("Data berhasil direject", "green");
           } else {
             List<dynamic> result = json.decode(response.body)['data'];
-            //print(result);
+            // print(result);
             if (data['type'] == 'get_detail_stokIn') {
               List<DetailBarangMasukKeluar> data =
                   result
@@ -450,6 +477,7 @@ class ServiceApi {
             }
           }
         default:
+          Get.back();
           throw Exception(response.reasonPhrase);
       }
     } on Exception catch (e) {
@@ -493,6 +521,7 @@ class ServiceApi {
             }
           }
         default:
+          Get.back();
           throw Exception(response.reasonPhrase);
       }
     } on Exception catch (e) {
@@ -502,7 +531,7 @@ class ServiceApi {
     }
   }
 
-  getAsset(Map<String, dynamic> data) async {
+  Future<StockResponse?> getAsset(Map<String, dynamic> data) async {
     try {
       final response = await http
           .post(Uri.parse('${baseUrl}asset'), body: data)
@@ -510,22 +539,37 @@ class ServiceApi {
 
       switch (response.statusCode) {
         case 200:
-          List<dynamic> result = json.decode(response.body)['data'];
-          List<DetailBarangMasukKeluar> data =
-              result.map((e) => DetailBarangMasukKeluar.fromJson(e)).toList();
-          return data;
+          final body = json.decode(response.body);
+
+          List<dynamic> resultDetailBarang = body['data'];
+          List<DetailBarangMasukKeluar> detailBarang =
+              resultDetailBarang
+                  .map((e) => DetailBarangMasukKeluar.fromJson(e))
+                  .toList();
+
+          List<dynamic> resultDetailAdj = body['data'];
+          List<DetailAdjModel> detailAdj =
+              resultDetailAdj.map((e) => DetailAdjModel.fromJson(e)).toList();
+
+          return StockResponse(
+            detailBarangMasukKeluar: detailBarang,
+            detailAdj: detailAdj,
+          );
+
         default:
+          Get.back();
           throw Exception(response.reasonPhrase);
       }
     } on TimeoutException catch (e) {
       showToast('$e', 'red');
-    } on Exception catch (e) {
-      // rethrow;
+    } catch (e) {
+      Get.back();
       showToast('$e', 'red');
     }
+    return null;
   }
 
-  getStockAsset(Map<String, dynamic> data) async {
+  Future<StockResponse?> getStockAsset(Map<String, dynamic> data) async {
     try {
       final response = await http
           .post(Uri.parse('${baseUrl}stock'), body: data)
@@ -533,60 +577,72 @@ class ServiceApi {
 
       switch (response.statusCode) {
         case 200:
-          List<dynamic> result = json.decode(response.body)['data'];
-          List<DetailBarangMasukKeluar> data =
-              result.map((e) => DetailBarangMasukKeluar.fromJson(e)).toList();
-          return data;
+          final body = json.decode(response.body);
+
+          List<dynamic> resultDetailBarang = body['data'];
+          List<DetailBarangMasukKeluar> detailBarang =
+              resultDetailBarang
+                  .map((e) => DetailBarangMasukKeluar.fromJson(e))
+                  .toList();
+
+          List<dynamic> resultDetailAdj = body['data'];
+          List<DetailAdjModel> detailAdj =
+              resultDetailAdj.map((e) => DetailAdjModel.fromJson(e)).toList();
+
+          return StockResponse(
+            detailBarangMasukKeluar: detailBarang,
+            detailAdj: detailAdj,
+          );
+
         default:
           Get.back();
           throw Exception(response.reasonPhrase);
       }
     } on TimeoutException catch (e) {
       showToast('$e', 'red');
-    } on Exception catch (e) {
-      // rethrow;
+    } catch (e) {
       Get.back();
       showToast('$e', 'red');
     }
+    return null;
   }
 
   report(Map<String, dynamic> data) async {
     try {
       final response = await http
-          .post(Uri.parse('${baseUrl}report'), body: data)
+          .post(Uri.parse('${baseUrl}reports'), body: data)
           .timeout(const Duration(minutes: 1));
-      switch (response.statusCode) {
-        case 200:
-          if (data['type'] != "add_report" && data['type'] != "update_report") {
-            List<dynamic> result = json.decode(response.body)['data'];
-            List<Report> data = result.map((e) => Report.fromJson(e)).toList();
-            // Get.snackbar(
-            //   "Sukses",
-            //   "Data berhasil diambil",
-            //   snackPosition: SnackPosition.BOTTOM,
-            // );
-            return data;
-          } else if (data['type'] == "update_report") {
-            // Notifikasi sukses update data
-            // Get.back();
-            // succesDialog(
-            //   Get.context,
-            //   'Data berhasil diupdate',
-            //   DialogType.success,
-            //   'SUKSES',
-            // );
-          } else if (data['type'] == "add_report") {
-            // Notifikasi sukses add data
-            // Get.back();
-            // showToast("Report berhasil dibuat", "green");
-            // succesDialog(
-            //   Get.context,
-            //   "Data berhasil ditambahkan",
-            //   DialogType.success,
-            //   'SUKSES',
-            // );
-          }
-          break;
+      if (response.statusCode == 200) {
+        switch (data['type']) {
+          case "add_report":
+            showToast("Report berhasil dibuat", "green");
+            return true;
+          case "update_report":
+            // showToast("Data berhasil diupdate", "green");
+            return true;
+          case "delete_detail_report":
+            showToast("Item berhasil dihapus", "green");
+            return true;
+          case "delete_report":
+            showToast("Report berhasil dihapus", "green");
+            return true;
+          default:
+            final jsonResult = json.decode(response.body)['data'];
+            if (data['type'] == "rekap_by_branch") {
+              List<ReportByStore> listData =
+                  (jsonResult as List)
+                      .map((e) => ReportByStore.fromJson(e))
+                      .toList();
+              return listData;
+            } else {
+              List<Report> listData =
+                  (jsonResult as List).map((e) => Report.fromJson(e)).toList();
+              return listData;
+            }
+        }
+      } else {
+        showToast("Gagal menerima data: ${response.statusCode}", "red");
+        return null;
       }
     } on Exception catch (e) {
       Get.back();
@@ -594,19 +650,19 @@ class ServiceApi {
     }
   }
 
-  reportDetailSubmit(FormData formData) async {
+  updateReportWithImgAf(FormData formData) async {
     try {
       final response = await GetConnect()
           .post(
-            '${baseUrl}report',
+            '${baseUrl}reports',
             formData,
             headers: {'Content-Type': 'multipart/form-data'},
           )
           .timeout(const Duration(minutes: 1));
       switch (response.statusCode) {
         case 200:
-          showToast("Report berhasil dibuat", "green");
-          Get.back();
+          // showToast("Report berhasil dibuat", "green");
+          // Get.back();
 
           break;
         default:
@@ -619,25 +675,30 @@ class ServiceApi {
     }
   }
 
-  // getRequestData(Map<String, dynamic> data) async {
-  //   try {
-  //     final response = await http
-  //         .post(Uri.parse('${baseUrl}request'), body: data)
-  //         .timeout(const Duration(minutes: 1));
-  //     switch (response.statusCode) {
-  //       case 200:
-  //         List<dynamic> result = json.decode(response.body)['data'];
-  //         List<RequestModel> data =
-  //             result.map((e) => RequestModel.fromJson(e)).toList();
-  //         return data;
-  //       default:
-  //         throw Exception(response.reasonPhrase);
-  //     }
-  //   } on Exception catch (e) {
-  //     // rethrow;
-  //     showToast('$e', 'red');
-  //   }
-  // }
+  reportDetailSubmit(FormData formData) async {
+    try {
+      final response = await GetConnect()
+          .post(
+            '${baseUrl}reports',
+            formData,
+            headers: {'Content-Type': 'multipart/form-data'},
+          )
+          .timeout(const Duration(minutes: 1));
+      switch (response.statusCode) {
+        case 200:
+          // showToast("Report berhasil dibuat", "green");
+          // Get.back();
+
+          break;
+        default:
+          Get.back();
+          throw Exception(response.status);
+      }
+    } on Exception catch (e) {
+      Get.back();
+      showToast(e.toString(), "red");
+    }
+  }
 
   getCatAsset(Map<String, String?> data) async {
     try {
@@ -707,7 +768,9 @@ class ServiceApi {
           } else if (data['type'] == 'update_request') {
             Get.back();
             dialogMsgScsUpd('Info', 'Data berhasil diupdate');
-          } else if (data['type'] == 'add_detail_request') {
+          } else if (data['type'] == 'add_detail_request' ||
+              data['type'] == 'accept_item_req' ||
+              data['type'] == 'cancel_item_req') {
           } else {
             List<dynamic> result = json.decode(response.body)['data'];
 
@@ -730,6 +793,175 @@ class ServiceApi {
       // rethrow;
       Get.back();
       showToast('$e', 'red');
+    }
+  }
+
+  adjIn(Map<String, dynamic> data) async {
+    // switch (data['type']) {
+    //   case 'add_stokIn':
+    try {
+      final response = await http
+          .post(Uri.parse('${baseUrl}adj_in'), body: data)
+          .timeout(const Duration(minutes: 1));
+      // print('${baseUrl}adj_in');
+      // print(data);
+      switch (response.statusCode) {
+        case 200:
+          if (data['type'] == 'add_adjIn') {
+            showToast("Data tersimpan", "green");
+          } else if (data['type'] == 'update_data') {
+            Get.back();
+            dialogMsgScsUpd('Info', 'Data berhasil diupdate');
+          } else if (data['type'] == 'add_detail_adjIn') {
+          } else if (data['type'] == 'delete_adjIn') {
+            showToast("Data berhasil dihapus", "green");
+          } else if (data['type'] == 'reject_data') {
+            showToast("Data berhasil direject", "green");
+          } else if (data['type'] == 'accept_data') {
+            showToast("Data berhasil disetujui", "green");
+          } else {
+            List<dynamic> result = json.decode(response.body)['data'];
+            // print(result);
+            if (data['type'] == 'get_detail_adjIn') {
+              if (json.decode(response.body)['success'] == false) {
+                // stop loading dialog before
+                Get.back();
+                showToast(
+                  'This data is invalid, there are no item details in it',
+                  'red',
+                );
+              } else {
+                List<DetailAdjModel> data =
+                    result.map((e) => DetailAdjModel.fromJson(e)).toList();
+                return data;
+              }
+            } else {
+              List<AdjModel> data =
+                  result.map((e) => AdjModel.fromJson(e)).toList();
+              return data;
+            }
+          }
+        default:
+          Get.back();
+          throw Exception(response.reasonPhrase);
+      }
+    } on Exception catch (e) {
+      // rethrow;
+      showToast('$e', 'red');
+      Get.back();
+    }
+  }
+
+  adjOut(Map<String, dynamic> data) async {
+    // switch (data['type']) {
+    //   case 'add_stokIn':
+    try {
+      final response = await http
+          .post(Uri.parse('${baseUrl}adj_out'), body: data)
+          .timeout(const Duration(minutes: 1));
+      // print('${baseUrl}adj_in');
+      // print(data);
+      switch (response.statusCode) {
+        case 200:
+          if (data['type'] == 'add_adjOut') {
+            showToast("Data tersimpan", "green");
+          } else if (data['type'] == 'update_data') {
+            Get.back();
+            dialogMsgScsUpd('Info', 'Data berhasil diupdate');
+          } else if (data['type'] == 'add_detail_adjOut') {
+          } else if (data['type'] == 'delete_adjOut') {
+            showToast("Data berhasil dihapus", "green");
+          } else if (data['type'] == 'reject_data') {
+            showToast("Data berhasil direject", "green");
+          } else if (data['type'] == 'accept_data') {
+            showToast("Data berhasil disetujui", "green");
+          } else {
+            List<dynamic> result = json.decode(response.body)['data'];
+            // print(result);
+            if (data['type'] == 'get_detail_adjOut') {
+              if (json.decode(response.body)['success'] == false) {
+                // stop loading dialog before
+                Get.back();
+                showToast(
+                  'This data is invalid, there are no item details in it',
+                  'red',
+                );
+              } else {
+                List<DetailAdjModel> data =
+                    result.map((e) => DetailAdjModel.fromJson(e)).toList();
+                return data;
+              }
+            } else {
+              List<AdjModel> data =
+                  result.map((e) => AdjModel.fromJson(e)).toList();
+              return data;
+            }
+          }
+        default:
+          Get.back();
+          throw Exception(response.reasonPhrase);
+      }
+    } on Exception catch (e) {
+      // rethrow;
+      showToast('$e', 'red');
+      Get.back();
+    }
+  }
+
+  so(Map<String, dynamic> data) async {
+    // switch (data['type']) {
+    //   case 'add_stokIn':
+    try {
+      final response = await http
+          .post(Uri.parse('${baseUrl}stock_opname'), body: data)
+          .timeout(const Duration(minutes: 1));
+      // print('${baseUrl}adj_in');
+      // print(data);
+      switch (response.statusCode) {
+        case 200:
+          if (data['type'] == 'add_so') {
+            showToast("Data tersimpan", "green");
+          } else if (data['type'] == 'update_data') {
+            Get.back();
+            dialogMsgScsUpd('Info', 'Data berhasil diupdate');
+          } else if (data['type'] == 'add_detail_so') {
+          } else if (data['type'] == 'delete_so') {
+            showToast("Data berhasil dihapus", "green");
+          } else if (data['type'] == 'reject_data') {
+            showToast("Data berhasil direject", "green");
+          } else if (data['type'] == 'accept_data') {
+            showToast("Data berhasil disetujui", "green");
+          } else {
+            List<dynamic> result = json.decode(response.body)['data'];
+            // print(result);
+            if (data['type'] == 'get_detail_so') {
+              if (json.decode(response.body)['success'] == false) {
+                // stop loading dialog before
+                Get.back();
+                showToast(
+                  'This data is invalid, there are no item details in it',
+                  'red',
+                );
+              } else {
+                List<SoDetailModel> data =
+                    result.map((e) => SoDetailModel.fromJson(e)).toList();
+                return data;
+              }
+            } else {
+              if (result == []) return null;
+              List<SoModel> data =
+                  result.map((e) => SoModel.fromJson(e)).toList();
+              return data;
+            }
+          }
+        default:
+          Get.back();
+          throw Exception(response.reasonPhrase);
+      }
+    } on Exception catch (e) {
+      // rethrow;
+      showToast('$e', 'red');
+      Get.back();
     }
   }
 }

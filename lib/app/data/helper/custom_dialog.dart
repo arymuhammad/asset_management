@@ -1,5 +1,6 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +20,26 @@ defaultSnackBar(context, message) {
   // Find the ScaffoldMessenger in the widget tree
   // and use it to show a SnackBar.
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
+}
+
+snackbarCopy({required String item}) async {
+  await Clipboard.setData(ClipboardData(text: item));
+  Get.snackbar(
+    'Copied',
+    'ID $item berhasil disalin ke clipboard!',
+    snackPosition: SnackPosition.BOTTOM,
+    maxWidth: 400, // Batasi lebar maksimal snackbar
+    margin: const EdgeInsets.only(
+      right: 20,
+      bottom: 20,
+    ), // Margin kanan dan bawah
+    borderRadius: 8,
+    backgroundColor: Colors.black87,
+    colorText: Colors.white,
+    snackStyle: SnackStyle.FLOATING, // Floating agar tidak melebar penuh
+    animationDuration: const Duration(milliseconds: 300),
+    duration: const Duration(seconds: 2),
+  );
 }
 
 showToast(String message, String bgcolor) {
@@ -45,7 +66,7 @@ dialogMsg(title, msg) {
   );
 }
 
-void dialogMsgScsUpd(code, msg) {
+dialogMsgScsUpd(code, msg) {
   Get.defaultDialog(
     title: code,
     middleText: msg,
@@ -92,15 +113,23 @@ void dialogMsgAbsen(code, msg) {
   );
 }
 
-void succesDialog(context, String desc, DialogType type, String title, bool isWideScreen) {
+succesDialog(
+  BuildContext context,
+  String desc,
+  DialogType type,
+  String title,
+  bool isWideScreen,
+) {
   AwesomeDialog(
+    useRootNavigator: true,
     context: context,
     animType: AnimType.scale,
     headerAnimationLoop: false,
     dialogType: type,
     dismissOnTouchOutside: false,
     dismissOnBackKeyPress: false,
-    width:  isWideScreen
+    width:
+        isWideScreen
             ? MediaQuery.of(context).size.width * 0.3
             : MediaQuery.of(context).size.width,
     title: title,
@@ -122,13 +151,15 @@ failedDialog(
   bool isWideScreen,
 ) {
   AwesomeDialog(
+    useRootNavigator: true,
     context: context,
     animType: AnimType.scale,
     headerAnimationLoop: false,
     dialogType: DialogType.error,
     dismissOnTouchOutside: false,
     dismissOnBackKeyPress: false,
-    width: isWideScreen
+    width:
+        isWideScreen
             ? MediaQuery.of(context).size.width * 0.3
             : MediaQuery.of(context).size.width,
     title: title,
@@ -167,6 +198,35 @@ infoDialog(
     onDismissCallback: (type) {
       debugPrint('Dialog Dissmiss from callback $type');
     },
+  ).show();
+}
+
+void warningDialog(
+  BuildContext context,
+  String? title,
+  String? desc,
+  Function()? btnOkOnPress,
+  bool? isWideScreen,
+) {
+  AwesomeDialog(
+    context: context,
+    dialogType: DialogType.warning,
+    dismissOnTouchOutside: false,
+    dismissOnBackKeyPress: false,
+    headerAnimationLoop: false,
+    animType: AnimType.bottomSlide,
+    width:
+        isWideScreen!
+            ? MediaQuery.of(context).size.width * 0.3
+            : MediaQuery.of(context).size.width,
+    title: title,
+    desc: desc,
+    btnCancelOnPress: () {},
+    btnOkOnPress: btnOkOnPress,
+    btnCancelColor: Colors.redAccent[700],
+    btnCancelIcon: Icons.cancel,
+    btnOkColor: Colors.blueAccent[700],
+    btnOkIcon: Icons.check_circle_rounded,
   ).show();
 }
 
@@ -243,3 +303,29 @@ loadingDialog(msg, String? msg2) {
 //     ]),
 //   );
 // }
+void getDefaultSnackbar({
+  required String title,
+  required String desc,
+  required bool success,
+}) {
+  Get.snackbar(
+    title,
+    desc,
+    colorText: Colors.white,
+    backgroundColor: success ? Colors.green[700] : Colors.red[700],
+    icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+    maxWidth: 300, // Batasi lebar maksimal snackbar
+    margin: const EdgeInsets.only(
+      left: 1000,
+      bottom: 20,
+    ), // Margin kanan dan bawah
+    borderRadius: 8,
+    showProgressIndicator: true,
+    progressIndicatorBackgroundColor: Colors.white,
+    snackPosition: SnackPosition.BOTTOM,
+    snackStyle: SnackStyle.FLOATING, // Floating agar tidak melebar penuh
+    animationDuration: const Duration(milliseconds: 300),
+    duration: const Duration(seconds: 1, milliseconds: 100),
+    isDismissible: true,
+  );
+}

@@ -7,7 +7,7 @@ var subTitleColor = Colors.grey[600];
 var timeColor = Colors.blueAccent[700];
 var defaultColor = Colors.black;
 var bgContainer = Colors.blue[50];
-var red = Colors.redAccent[700];
+var red = Colors.redAccent[700]!;
 var green = Colors.greenAccent[700]!;
 var darkGreen = const Color.fromARGB(255, 3, 136, 7);
 
